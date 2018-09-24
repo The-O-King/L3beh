@@ -11,6 +11,7 @@ class System{
         componentSignature neededComponents;
         std::set<int> entities;
     public:
+        System();
         virtual void update(double deltaTime); 
         componentSignature getNeededComponents() { return neededComponents; }
         void addEntity(int entityID) { entities.emplace(entityID); }

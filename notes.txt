@@ -2,28 +2,51 @@ How I installed GLFW Binaries for Windows:
 https://stackoverflow.com/questions/12886609/setting-up-glfw-with-mingw
 Had to put GLFW/glfw3.h into C:\MinGW64\mingw64\x86_64-w64-mingw32\include
 Had to put *.a static libraries into C:\MinGW64\mingw64\x86_64-w64-mingw32\lib
+Put the glfw3.dll in System32 folder
+
+Since we are using the GLFW dll and linking statically, at the top of main.cpp you must specify the macro
+        #define GLFW_DLL
+
+
+
+Had to install GLEW to get support for openGL verions higher than 1.1
+http://glew.sourceforge.net/install.html
+
+To do so you need to build it yourself for use with MinGW64. They only have prebuilt binaries
+available for use with Visual Studios and Visual C++. Here are some instructions I followed:
+https://www.opengl.org/discussion_boards/showthread.php/198730-How-do-I-build-GLEW-for-mingw-w64-using-cmake-on-Windows?p=1283379&viewfull=1#post1283379
+But I have included the built binaries for MinGW64 in the GLTools/glew-2.1.0.lib folder
+Follow a similar pattern as with GLFW for install of GLEW:
+    1. Place the include/GL folder in the C:\MinGW64\mingw64\x86_64-w64-mingw32\include
+    2. Place teh *.a static libraries into C:\MinGW64\mingw64\x86_64-w64-mingw32\lib
+    3. Place the glew32.dll in System32 folder
+
+Since we are using the GLEW dll and linking statically, at the top of main.cpp you must specify the macro
+        #define GLEW_STATIC
+
 
 Help with getting deltaTimes (and potential consistent frame times):
 https://stackoverflow.com/questions/20390028/c-using-glfwgettime-for-a-fixed-time-step
 
+Creating Unique type IDs for component Registration:
+https://stackoverflow.com/a/3741866/10383230
 
-
-ENTITY PLAYER
-PHYSICS 0 0 0 0
-RENDER modelFile.obj vertShader.vert fragShader.frag
-
-
-
+Help creating eraser function pointers used to destroy entities:
+https://stackoverflow.com/questions/52397451/call-a-vectors-function-given-the-vectors-pointer-as-a-void
 
 
 
-enum componentID{ ... }                                             // index the component manager will use
 
-struct ComponentBase{ }
-struct MovementComponent : ComponentBase {
-    glm::vec3 velocity = 0;
-    glm::vec3 acceleration = 0;
-}
+
+Example WorldConfig.txt (subject to change):
+    ENTITY
+    PHYSICS 0 0 0 0
+    RENDER modelFile.obj vertShader.vert fragShader.frag
+    /ENTITY
+    ...
+
+
+Basic Documentation of Classes:
 
 ComponentManager:
     std::vector<std::unordered_map<int, int>>                       // maps entityID to index in component vector
@@ -32,9 +55,6 @@ ComponentManager:
 Entity:
     int entityID                                        // Unique ID of this entity
     componenetSignature ownedComponents                 // Bitset of all components this entity has
-
-    addComponent(int componentID)                       // 
-    removeComponent(int componentID)
 
 System:
     componentSignature neededComponents                 // Biset of components an entity needs to be part of system

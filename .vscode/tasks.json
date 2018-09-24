@@ -8,7 +8,7 @@
         "type": "shell",
         "command": "g++",
         "args": [
-          "-g", "-Wall", "-std=c++17", "-o", "compile/outDebug", "*.cpp", "-lopengl32", "-lglfw3",  "-lglfw3dll"
+          "-g", "-Wall", "-std=c++17", "-o", "compile/outDebug", "*.cpp", "-lglew32", "-lopengl32", "-lglfw3",  "-lglfw3dll"
         ],
         "group": {
           "kind": "build",
@@ -20,7 +20,7 @@
         "type": "shell",
         "command": "g++",
         "args": [
-          "-std=c++17", "-o", "compile/outRelease", "*.cpp", "-lopengl32", "-lglfw3",  "-lglfw3dll"
+          "-std=c++17", "-o", "compile/outRelease", "*.cpp", "-lglew32", "-lopengl32", "-lglfw3",  "-lglfw3dll"
         ],
         "group": {
           "kind": "build",

@@ -1,0 +1,79 @@
+RenderComponent:
+	bool initialized
+	String vertShaderFileName
+	String fragShaderFileName
+	String modelFileName
+	String textureFileName
+
+	GLuint for VertexBufferObject 
+	GLuint for Vertex Shader
+	GLuint for Fragment Shader
+	GLuint for Geometry Shader
+	GLuint for Program (which is a combo of the shaders)
+
+
+RenderComponent will store multiple maps from string(fileName)->GLuint(openGL Object) so that we do not reload objects
+that have already been loaded to the GPU
+
+If this is a new entity, we will need to initialize it's components in terms of openGL states
+Initialization will include:
+	1. Creating a new vertex buffer object if this model has not been opened before
+		if (modelFileName not in map)
+			unsigned int VBO;
+			glGenBuffers(1, &VBO);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			vector<vertex> vertices = readFile(modelFileName)
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+			map[modelFileName] = VBO;
+		component.VertexBufferObject = map[modelFileName]
+
+	2. Creating the vertex/fragment/geometry shader and program if those have not been opened before
+		if (vertShaderFileName not in map)
+			unsigned int vertexShader;
+			vertexShader = glCreateShader(GL_VERTEX_SHADER);
+			string vertexShaderSource = readFile(vertShaderFileName);
+			glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+			glCompileShader(vertexShader);
+			map[vertShaderFileName] = vertexShader;
+		component.VertexShader = vertexShader;
+
+		if (fragShaderFileName not in map)
+			unsigned int fragmentShader;
+			fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+			string fragmentShaderSource = readFile(fragShaderFileName);
+			glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+			glCompileShader(fragmentShader);
+			map[fragShaderFileName] = fragmentShader;
+		component.FragmentShader = fragmentShader;
+
+		if (vertShaderFileName+fragShaderFileName not in map)
+			unsigned int shaderProgram;
+			shaderProgram = glCreateProgram();
+			glAttachShader(shaderProgram, component.vertexShader);
+			glAttachShader(shaderProgram, component.fragmentShader);
+			glLinkProgram(shaderProgram);
+			map[vertShaderFileName+fragShaderFileName] = shaderProgram;
+		component.Program = shaderProgram;
+		
+		if (made new vertShader)
+			glDeleteShader(vertShader);
+		if (made new fragShader)
+			glDeleteShader(fragShader);
+
+*************************************************************************
+Need to figure out how to get the user to specify the vertexAttributeArray Parameters
+Or I could enforce some generic setup of vert-tex-normal or vert-color-normal that users must export as
+**************************************************************************
+
+
+***************************************************************************
+The state of VertexBufferObject and VertexAttributeArray is actually stored 
+in a VertexAttributeObject that I can call on in the future
+*************************************************************************** 
+
+	3. Once you ensure that you have all the openGL state set up properly, you can make the draw call
+
+		glBindVertexArray(VAO);
+		glUseProgram(component.Program);
+		glDrawArray();
+
