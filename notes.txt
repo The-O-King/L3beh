@@ -1,0 +1,45 @@
+How I installed GLFW Binaries for Windows:
+https://stackoverflow.com/questions/12886609/setting-up-glfw-with-mingw
+Had to put GLFW/glfw3.h into C:\MinGW64\mingw64\x86_64-w64-mingw32\include
+Had to put *.a static libraries into C:\MinGW64\mingw64\x86_64-w64-mingw32\lib
+
+Help with getting deltaTimes (and potential consistent frame times):
+https://stackoverflow.com/questions/20390028/c-using-glfwgettime-for-a-fixed-time-step
+
+
+
+ENTITY PLAYER
+PHYSICS 0 0 0 0
+RENDER modelFile.obj vertShader.vert fragShader.frag
+
+
+
+
+
+
+enum componentID{ ... }                                             // index the component manager will use
+
+struct ComponentBase{ }
+struct MovementComponent : ComponentBase {
+    glm::vec3 velocity = 0;
+    glm::vec3 acceleration = 0;
+}
+
+ComponentManager:
+    std::vector<std::unordered_map<int, int>>                       // maps entityID to index in component vector
+    std::vector<std::vector<ComponentBase>> componentList           // list containing the actual components themselves
+
+Entity:
+    int entityID                                        // Unique ID of this entity
+    componenetSignature ownedComponents                 // Bitset of all components this entity has
+
+    addComponent(int componentID)                       // 
+    removeComponent(int componentID)
+
+System:
+    componentSignature neededComponents                 // Biset of components an entity needs to be part of system
+    std::vector<int> entities                           // A list of all entities part of this system
+
+World:
+    int currID                                          // Next ID to be assigned to entity
+    std::vector<System> worldSystems                    // Systems that will be updated (needs to be ordered)
