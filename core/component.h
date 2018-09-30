@@ -5,25 +5,6 @@
 #include <bitset>
 #include "component_utils.h"
 
-struct TransformComponent{
-    double x = 0, y = 0, z = 0;
-};
-
-struct RenderComponent{
-    float vertices[9] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
-    };
-    unsigned int vboPointer; 
-};
-
-struct MovementComponent{
-    double velocity;
-    double acceleration;
-};
-
-
 class ComponentManager{
     private:
         std::vector<std::unordered_map<int, int>> entityDict;
@@ -44,7 +25,7 @@ class ComponentManager{
         template <class T>
         bool removeComponent(int entity);
         template <class T>
-        T getComponent(int entity);
+        T& getComponent(int entity);
 };
 
 template <class T>
@@ -108,7 +89,7 @@ bool ComponentManager::removeComponent(int entityID){
 }
 
 template <class T>
-T ComponentManager::getComponent(int entityID){
+T& ComponentManager::getComponent(int entityID){
     int compID = type_id<T>();
     std::vector<T>* allComponents = (std::vector<T>*)componentHolder[compID];
     return (*allComponents)[entityDict[compID][entityID]];

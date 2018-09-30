@@ -12,16 +12,11 @@ class System{
         std::set<int> entities;
     public:
         System();
+        virtual void init();
         virtual void update(double deltaTime); 
         componentSignature getNeededComponents() { return neededComponents; }
         void addEntity(int entityID) { entities.emplace(entityID); }
         void removeEntity(int entityID) { entities.erase(entityID); }
-};
-
-class RenderSystem : public System{
-    public:
-        RenderSystem(World* w);
-        void update(double deltaTime) override;
 };
 
 #endif

@@ -34,6 +34,9 @@ https://stackoverflow.com/a/3741866/10383230
 Help creating eraser function pointers used to destroy entities:
 https://stackoverflow.com/questions/52397451/call-a-vectors-function-given-the-vectors-pointer-as-a-void
 
+Header and Source for OBJ/Shader file loading gotten from:
+https://github.com/opengl-tutorials/ogl/tree/master/common
+
 
 
 
