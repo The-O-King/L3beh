@@ -37,12 +37,12 @@ inline int run(World& gameWorld, std::string worldConfigFile)
         fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
 
+    gameWorld.baseWorldGen(worldConfigFile);
     double lastTime = glfwGetTime();
     double deltaTime = 0;
     double currTime = 0;
     double totalTime = 0;
     
-    gameWorld.baseWorldGen(worldConfigFile);
     for(System* s : gameWorld.getSystems()){
         s->init();
     }

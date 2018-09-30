@@ -1,6 +1,4 @@
 #include "world.h"
-#include <fstream>
-#include <sstream> 
 
 World::World(){
     currID = 0;
@@ -26,10 +24,13 @@ bool World::baseWorldGen(std::string worldConfigFile){
             getline(inputFile, line);
             while (line != "/Entity"){
                 currLine.str(line);
+                currLine.seekg(0);
                 currLine >> command;
                 customWorldGen(baby, command, currLine);
+                getline(inputFile, line);
             }
         }
+        command = "";
     }
     return true;
 }

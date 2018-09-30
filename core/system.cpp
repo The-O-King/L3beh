@@ -4,7 +4,6 @@
 #include "world.h"
 
 System::System(){
-    neededComponents.set();
 }
 
 void System::init(){

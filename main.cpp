@@ -1,7 +1,7 @@
-#include "core/world.h"
+#include "MyWorld.h"
 #include "core/runner.h"
 
 int main(){
-    World newWorld;
+    MyWorld newWorld;
     return run(newWorld, "worldConfig.txt");
 }
