@@ -37,6 +37,7 @@ inline int run(World& gameWorld, std::string worldConfigFile)
         fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
 
+    gameWorld.setWindow(window);
     gameWorld.baseWorldGen(worldConfigFile);
     double lastTime = glfwGetTime();
     double deltaTime = 0;

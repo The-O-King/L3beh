@@ -1,8 +1,10 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#define GLFW_DLL
 #include "system.h"
 #include "component.h"
+#include <GLFW/glfw3.h>
 #include <unordered_map>
 #include <fstream>
 #include <sstream> 
@@ -12,6 +14,7 @@
 class World{
     protected:
         int currID;
+        GLFWwindow* mWindow;
         std::vector<System*> mSystems;
         ComponentManager mComponents;
         std::unordered_map<int, componentSignature> liveEntities;
@@ -23,6 +26,8 @@ class World{
         int createEntity();
         void destroyEntity(int entityID);
         std::vector<System*>& getSystems();
+        void setWindow(GLFWwindow* window);
+        int getKey(int key);
 
         template <class T>
         void addComponentToEntity(int entityID);

@@ -8,6 +8,14 @@ std::vector<System*>& World::getSystems(){
     return mSystems;
 }
 
+void World::setWindow(GLFWwindow* window){
+    mWindow = window;
+}
+
+int World::getKey(int key){
+    return glfwGetKey(mWindow, key);
+}
+
 bool World::baseWorldGen(std::string worldConfigFile){
     std::ifstream inputFile;
     inputFile.open(worldConfigFile, std::ifstream::in);

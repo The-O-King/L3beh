@@ -22,7 +22,11 @@ struct RenderComponent{
 	unsigned int program = 0;
 };
 
-struct MovementComponent{
+struct PlayerMovementComponent{
+	bool active;
+};
+
+struct PhysicsComponent{
     glm::vec3 velocity;
     glm::vec3 acceleration;
 };

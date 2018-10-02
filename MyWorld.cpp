@@ -1,13 +1,16 @@
 #include "core/runner.h"
+#include "PlayerMovementSystem.h"
 #include "RotateSystem.h"
 #include "RenderSystem.h"
 #include "MyWorld.h"
 
 MyWorld::MyWorld(){
+    mSystems.push_back(new PlayerMovementSystem(this));
     mSystems.push_back(new RotateSystem(this));
     mSystems.push_back(new RenderSystem(this));
     mComponents.registerComponent<TransformComponent>();
     mComponents.registerComponent<RenderComponent>();
+    mComponents.registerComponent<PlayerMovementComponent>();
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
@@ -30,6 +33,13 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         data >> model;
         rc.fragShaderFileName = model;
         addComponentToEntity<RenderComponent>(entityID, rc);
+    }
+    else if (command == "PlayerMovement"){
+        PlayerMovementComponent pc;
+        int active;
+        data >> active;
+        pc.active = active;
+        addComponentToEntity<PlayerMovementComponent>(entityID, pc);
     }
     return true;
 }
