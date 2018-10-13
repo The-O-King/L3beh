@@ -1,6 +1,7 @@
 #include "PlayerMovementSystem.h"
 #include "CustomComponents.hpp"
 #include "core/world.h"
+#include "core/input.h"
 
 PlayerMovementSystem::PlayerMovementSystem(World* w){
     mWorld = w;
@@ -18,16 +19,16 @@ void PlayerMovementSystem::update(double deltaTime){
         if (pc.active){
             TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
 
-            if (mWorld->getKey(GLFW_KEY_W)){
+            if (Input::getKey(GLFW_KEY_W)){
                 tc.position.z += deltaTime * 1;
             }
-            if (mWorld->getKey(GLFW_KEY_S)){
+            if (Input::getKey(GLFW_KEY_S)){
                 tc.position.z -= deltaTime * 1;
             }
-            if (mWorld->getKey(GLFW_KEY_A)){
+            if (Input::getKey(GLFW_KEY_A)){
                 tc.position.y -= deltaTime * 1;
             }
-            if (mWorld->getKey(GLFW_KEY_D)){
+            if (Input::getKey(GLFW_KEY_D)){
                 tc.position.y += deltaTime * 1;
             }
         }

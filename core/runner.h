@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "world.h"
+#include "input.h"
 
 inline int run(World& gameWorld, std::string worldConfigFile)
 {
@@ -37,7 +38,7 @@ inline int run(World& gameWorld, std::string worldConfigFile)
         fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
 
-    gameWorld.setWindow(window);
+    Input::setWindow(window);
     gameWorld.baseWorldGen(worldConfigFile);
     double lastTime = glfwGetTime();
     double deltaTime = 0;

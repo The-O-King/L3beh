@@ -26,8 +26,6 @@ class World{
         int createEntity();
         void destroyEntity(int entityID);
         std::vector<System*>& getSystems();
-        void setWindow(GLFWwindow* window);
-        int getKey(int key);
 
         template <class T>
         void addComponentToEntity(int entityID);

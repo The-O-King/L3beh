@@ -38,7 +38,42 @@ Header and Source for OBJ/Shader file loading gotten from:
 https://github.com/opengl-tutorials/ogl/tree/master/common
 
 
+To Be Implemented:
 
+Add Tagging System with ability to get Entities By Tagging
+**Maybe also add specific Name System to entities too?
+**Decouple the entity stuff from the world into it's own class?
+
+Add Object Heirarchies (specifically for transforms)
+Move/Decouple Input from world (as singleton static class?)
+Decouple Camera entirely from Render System
+**Make it a component that can be added to any entity
+**Needs info on FOV, Transform (will this be from entity? Heirarchy?)
+**Also need a way to know the screen resolution I believe 
+
+
+Improve extendability of RenderSystem
+**Support Texture Loading
+**Support arbitrary vertexShader Input Attributes
+**Support Indexed Rendering
+**Support Batch/Instanced Rendering? Scene Graph?
+
+Add Lighting component
+Add Particle System
+
+Add Collision Detection
+**Collider Component for Primitives (Sphere/Box/Capsule(?))
+**Collision System will test all entities with Collider Component
+  against each other, adding those that collide to proper list in
+  colliderComponent (Enter/Stay/Exit)
+
+Add Basic Physics System
+**Will need a rigidbody component
+**Gravity/IsKinematic (no Physics)
+
+Add Physics Utility to do raycasts from Systems
+**Will need to have access to all entities with Collider Component
+**Should this be static member function of Physics System??
 
 
 Example WorldConfig.txt (subject to change):
