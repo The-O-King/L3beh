@@ -24,7 +24,7 @@ void RenderSystem::init(){
     glClearColor(.2f, .5f, .3f, 1.0);
 }
 
-void RenderSystem::update(double deltaTime){
+void RenderSystem::update(float deltaTime){
     for (int e : entities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);

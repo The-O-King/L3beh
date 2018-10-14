@@ -14,7 +14,7 @@ class RenderSystem : public System{
     public:
         RenderSystem(World* w);
         void init() override;
-        void update(double deltaTime) override;
+        void update(float deltaTime) override;
         void loadModel(RenderComponent& tc);
 };
 

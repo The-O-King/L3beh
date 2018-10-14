@@ -13,7 +13,7 @@ class System{
     public:
         System();
         virtual void init();
-        virtual void update(double deltaTime); 
+        virtual void update(float deltaTime); 
         componentSignature getNeededComponents() { return neededComponents; }
         void addEntity(int entityID) { entities.emplace(entityID); }
         void removeEntity(int entityID) { entities.erase(entityID); }

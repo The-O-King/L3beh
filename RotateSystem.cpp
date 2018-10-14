@@ -18,7 +18,7 @@ void RotateSystem::init(){
 
 }
 
-void RotateSystem::update(double deltaTime){
+void RotateSystem::update(float deltaTime){
     for (int e : entities){
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
         tc.rotation.z += 20 * deltaTime;

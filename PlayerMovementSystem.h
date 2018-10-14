@@ -10,7 +10,7 @@ class PlayerMovementSystem : public System{
     public:
         PlayerMovementSystem(World* w);
         void init() override;
-        void update(double deltaTime) override;
+        void update(float deltaTime) override;
 };
 
 #endif

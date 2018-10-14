@@ -10,7 +10,7 @@ class RotateSystem : public System{
     public:
         RotateSystem(World* w);
         void init() override;
-        void update(double deltaTime) override;
+        void update(float deltaTime) override;
 };
 
 #endif

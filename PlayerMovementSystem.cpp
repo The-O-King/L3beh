@@ -1,11 +1,12 @@
 #include "PlayerMovementSystem.h"
 #include "CustomComponents.hpp"
+#include "core/glm/glm.hpp"
 #include "core/world.h"
 #include "core/input.h"
 
 PlayerMovementSystem::PlayerMovementSystem(World* w){
     mWorld = w;
-    neededComponents[type_id<TransformComponent>()] = 1;
+    neededComponents[type_id<PhysicsComponent>()] = 1;
     neededComponents[type_id<PlayerMovementComponent>()] = 1;
 }
 
@@ -13,23 +14,17 @@ void PlayerMovementSystem::init(){
 
 }
 
-void PlayerMovementSystem::update(double deltaTime){
+void PlayerMovementSystem::update(float deltaTime){
     for (int e : entities){
         PlayerMovementComponent pc = mWorld->getComponent<PlayerMovementComponent>(e);
         if (pc.active){
-            TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
+            PhysicsComponent& phys = mWorld->getComponent<PhysicsComponent>(e);
 
             if (Input::getKey(GLFW_KEY_W)){
-                tc.position.z += deltaTime * 1;
+                phys.sumForces += glm::vec3(0, 0, 10) * (float)deltaTime;
             }
             if (Input::getKey(GLFW_KEY_S)){
-                tc.position.z -= deltaTime * 1;
-            }
-            if (Input::getKey(GLFW_KEY_A)){
-                tc.position.y -= deltaTime * 1;
-            }
-            if (Input::getKey(GLFW_KEY_D)){
-                tc.position.y += deltaTime * 1;
+                phys.sumForces -= glm::vec3(0, 0, 10) * (float)deltaTime;
             }
         }
     }

@@ -10,6 +10,6 @@ void System::init(){
 
 }
 
-void System::update(double deltaTime){
+void System::update(float deltaTime){
 
 }
