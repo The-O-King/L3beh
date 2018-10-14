@@ -28,28 +28,17 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     }
     else if (command == "Render"){
         RenderComponent rc;
-        std::string model;
-        data >> model;
-        rc.modelFileName = model;
-        data >> model;
-        rc.vertShaderFileName = model;
-        data >> model;
-        rc.fragShaderFileName = model;
+        data >> rc.modelFileName >> rc.vertShaderFileName >> rc.fragShaderFileName;
         addComponentToEntity<RenderComponent>(entityID, rc);
     }
     else if (command == "PlayerMovement"){
         PlayerMovementComponent pc;
-        int active;
-        data >> active;
-        pc.active = active;
+        data >> pc.active;
         addComponentToEntity<PlayerMovementComponent>(entityID, pc);
     }
     else if (command == "Physics"){
         PhysicsComponent pc;
-        float mass, drag;
-        data >> mass >> drag;
-        pc.mass = mass;
-        pc.drag = drag;
+        data >> pc.useGravity >> pc.isKinematic >> pc.mass;
         addComponentToEntity<PhysicsComponent>(entityID, pc);
     }
     return true;

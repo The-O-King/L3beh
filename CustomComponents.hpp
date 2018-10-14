@@ -27,12 +27,17 @@ struct PlayerMovementComponent{
 };
 
 struct PhysicsComponent{
+	bool useGravity;
+	bool isKinematic;
     glm::vec3 sumForces;
-    glm::vec3 sumTorques;
 	glm::vec3 velocity;
 	glm::vec3 acceleration;
 	float mass;
-	float drag;
+
+    glm::vec3 sumTorques;
+	glm::vec3 angularVelocity;
+	glm::vec3 angularAcceleration;
+	float momentOfInertia;
 };
 
 #endif
