@@ -7,6 +7,7 @@
 
 #include "RenderSystem.h"
 #include "CustomComponents.hpp"
+#include "core/components.h"
 #include "core/world.h"
 #include "RenderSystemUtils.hpp"
 
@@ -32,11 +33,11 @@ void RenderSystem::update(float deltaTime){
             loadModel(rc);
         }
         
-        glm::mat4 model = glm::translate(glm::mat4(1.0), tc.position);
-        model = glm::scale(model, tc.scale);
-        model = glm::rotate(model, (float)(glm::radians(tc.rotation.x)), glm::vec3(1.0, 0.0, 0.0));
-        model = glm::rotate(model, (float)(glm::radians(tc.rotation.y)), glm::vec3(0.0, 1.0, 0.0));
-        model = glm::rotate(model, (float)(glm::radians(tc.rotation.z)), glm::vec3(0.0, 0.0, 1.0));
+        glm::mat4 model = glm::translate(glm::mat4(1.0), tc.worldPosition);
+        model = glm::scale(model, tc.worldScale);
+        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
+        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
 
         glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(0,0,-2));
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);

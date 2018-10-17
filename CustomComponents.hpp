@@ -5,12 +5,6 @@
 #include "core/glm/vec3.hpp"
 using namespace std;
 
-struct TransformComponent{
-	glm::vec3 position = {0.0f, 0.0f, 0.0f};
-	glm::vec3 rotation = {0.0f, 0.0f, 0.0f};
-	glm::vec3 scale = {0.0f, 0.0f, 0.0f};
-};
-
 struct RenderComponent{
 	bool initialized = false;
 	string vertShaderFileName;
@@ -37,7 +31,6 @@ struct PhysicsComponent{
     glm::vec3 sumTorques;
 	glm::vec3 angularVelocity;
 	glm::vec3 angularAcceleration;
-	float momentOfInertia;
 };
 
 #endif

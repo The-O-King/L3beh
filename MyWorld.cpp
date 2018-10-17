@@ -1,14 +1,15 @@
 #include "core/runner.h"
+#include "core/components.h"
 #include "PlayerMovementSystem.h"
-#include "RotateSystem.h"
+#include "TransformSystem.h"
 #include "PhysicsSystem.h"
 #include "RenderSystem.h"
 #include "MyWorld.h"
 
 MyWorld::MyWorld(){
     mSystems.push_back(new PlayerMovementSystem(this));
-    mSystems.push_back(new RotateSystem(this));
     mSystems.push_back(new PhysicsSystem(this));
+    mSystems.push_back(new TransformSystem(this));
     mSystems.push_back(new RenderSystem(this));
     mComponents.registerComponent<TransformComponent>();
     mComponents.registerComponent<RenderComponent>();
@@ -17,16 +18,7 @@ MyWorld::MyWorld(){
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
-    if (command == "Transform"){
-        TransformComponent tc;
-        float x, y, z, xx, yy, zz, xs, ys, zs;
-        data >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
-        tc.position = glm::vec3(x, y, z);
-        tc.rotation = glm::vec3(xx, yy, zz);
-        tc.scale = glm::vec3(xs, ys, zs);
-        addComponentToEntity<TransformComponent>(entityID, tc);
-    }
-    else if (command == "Render"){
+    if (command == "Render"){
         RenderComponent rc;
         data >> rc.modelFileName >> rc.vertShaderFileName >> rc.fragShaderFileName;
         addComponentToEntity<RenderComponent>(entityID, rc);
@@ -39,6 +31,7 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     else if (command == "Physics"){
         PhysicsComponent pc;
         data >> pc.useGravity >> pc.isKinematic >> pc.mass;
+        if (pc.mass <= 0)  pc.mass = 0.000001; 
         addComponentToEntity<PhysicsComponent>(entityID, pc);
     }
     return true;

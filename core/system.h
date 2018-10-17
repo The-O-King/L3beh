@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
  
-#include "component.h"
+#include "component_utils.h"
 #include <set>
 class World;
 

@@ -1,5 +1,6 @@
 #include "PhysicsSystem.h"
 #include "CustomComponents.hpp"
+#include "core/components.h"
 #include "core/world.h"
 
 PhysicsSystem::PhysicsSystem(World* w){

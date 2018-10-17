@@ -2,6 +2,8 @@
 #define COMPONENT_UTILS_H
 
 #include <memory>
+#include <bitset>
+#include <vector>
 
 #define MAX_COMPONENT 100
 typedef std::bitset<MAX_COMPONENT> componentSignature;

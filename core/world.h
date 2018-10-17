@@ -3,7 +3,8 @@
 
 #define GLFW_DLL
 #include "system.h"
-#include "component.h"
+#include "componentManager.h"
+#include "components.h"
 #include <GLFW/glfw3.h>
 #include <unordered_map>
 #include <fstream>

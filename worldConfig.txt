@@ -1,13 +1,13 @@
 Entity NAMEHERE
 PlayerMovement 1
 Physics 0 0 1
-Transform 0 0 0   0 0 0  .25 .25 .25
+Transform 0    0 0 0   60 0 0  .25 .25 .25
 Render cube.obj cube.vert cube.frag 
 /Entity
 
 
 
 Entity NAMEHERE
-Transform 1 0 0   0 0 0  .25 .25 .25
+Transform 1    .5 0 0   30 30 0  .25 0 0
 Render cube.obj cube.vert cube.frag 
 /Entity

@@ -45,7 +45,10 @@ Add Tagging System with ability to get Entities By Tagging
 **Decouple the entity stuff from the world into it's own class?
 
 Add Object Heirarchies (specifically for transforms)
-Move/Decouple Input from world (as singleton static class?)
+Wrap Components in class with a set method that gets called whenever a variable changes
+**This could come in handy with the Transform component and updating the children components
+**Add utility functions for parenting/uparenting objects
+
 Decouple Camera entirely from Render System
 **Make it a component that can be added to any entity
 **Needs info on FOV, Transform (will this be from entity? Heirarchy?)

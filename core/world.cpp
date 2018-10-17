@@ -9,6 +9,10 @@ std::vector<System*>& World::getSystems(){
 }
 
 bool World::baseWorldGen(std::string worldConfigFile){
+    int worldRoot = createEntity();
+    TransformComponent worldRootTC;
+    addComponentToEntity<TransformComponent>(worldRoot, worldRootTC);
+
     std::ifstream inputFile;
     inputFile.open(worldConfigFile, std::ifstream::in);
 
@@ -26,7 +30,21 @@ bool World::baseWorldGen(std::string worldConfigFile){
                 currLine.str(line);
                 currLine.seekg(0);
                 currLine >> command;
-                customWorldGen(baby, command, currLine);
+                if (command == "Transform"){
+                    TransformComponent tc;
+                    float parent, x, y, z, xx, yy, zz, xs, ys, zs;
+                    currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
+                    tc.position = glm::vec3(x, y, z);
+                    tc.rotation = glm::vec3(xx, yy, zz);
+                    tc.scale = glm::vec3(xs, ys, zs);
+                    tc.parentEntity = parent;
+                    TransformComponent& parentTransform = getComponent<TransformComponent>(parent);
+                    parentTransform.childEntities.push_back(baby);
+                    addComponentToEntity<TransformComponent>(baby, tc);
+                }
+                else{
+                    customWorldGen(baby, command, currLine);
+                }
                 getline(inputFile, line);
             }
         }
@@ -47,12 +65,18 @@ int World::createEntity(){
 }
 
 void World::destroyEntity(int entityID){
-    componentSignature toDestroy = liveEntities[entityID];
+    vector<int> destroyList;
+    destroyList.push_back(entityID);
+    while (!destroyList.empty()){
+        int currDestroy = destroyList.back(); destroyList.pop_back();
+        vector<int> toAdd = getComponent<TransformComponent>(currDestroy).childEntities;
+        destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
 
-    for (System* s : mSystems){
-        s->removeEntity(entityID);
+        componentSignature toDestroy = liveEntities[currDestroy];
+        for (System* s : mSystems){
+            s->removeEntity(currDestroy);
+        }
+        mComponents.destroyEntity(entityID, toDestroy);
+        liveEntities.erase(currDestroy);
     }
-    
-    mComponents.destroyEntity(entityID, toDestroy);
-    liveEntities.erase(entityID);
 }
