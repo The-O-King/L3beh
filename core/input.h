@@ -6,8 +6,14 @@
 
 namespace Input{
     void setWindow(GLFWwindow* window);
-    int getKey(int keycode);
+    bool getKey(int keycode);
+    bool getKeyDown(int keycode);
+    bool getKeyUp(int keycode);
+    bool getMouseButton(int keycode);
+    bool getMouseButtonDown(int keycode);
+    bool getMouseButtonUp(int keycode);
     void getMousePos(double* xpos, double* ypos);
+    void resetKeyState();
 }
 
 #endif

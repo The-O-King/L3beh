@@ -48,6 +48,11 @@ Add Object Heirarchies (specifically for transforms)
 Wrap Components in class with a set method that gets called whenever a variable changes
 **This could come in handy with the Transform component and updating the children components
 **Add utility functions for parenting/uparenting objects
+**Find a more optimized way to update "dirty" child transforms
+****Currently I just update ALL transforms starting from the world neededComponents
+****Component Wrapper with get/set methods could allow me to run update function on children/mark as dirty
+****get/set update could be slow due to being unable to coalesce all updates at ownedComponents
+****Marking something as dirty could allow for my system to skip over non-dirty components
 
 Decouple Camera entirely from Render System
 **Make it a component that can be added to any entity

@@ -33,8 +33,9 @@ void PlayerMovementSystem::update(float deltaTime){
             if (Input::getKey(GLFW_KEY_DOWN)){
                 phys.sumForces -= glm::vec3(0, 50, 0) * (float)deltaTime;
             }
-            if (Input::getKey(GLFW_KEY_E)){
+            if (Input::getKeyDown(GLFW_KEY_E)){
                 phys.useGravity = !phys.useGravity;
+                phys.isKinematic = !phys.useGravity; 
             }
         }
     }
