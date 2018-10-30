@@ -23,7 +23,7 @@ void PhysicsSystem::update(float deltaTime){
 
             if (phys.useGravity)
                 phys.sumForces += phys.mass * glm::vec3(0, -9.8, 0);
-            glm::vec3 new_accel = phys.sumForces / phys.mass;
+            glm::vec3 new_accel = phys.sumForces * phys.invMass;
             glm::vec3 avg_accel = (last_accel + new_accel) / 2.0f;
             phys.velocity += avg_accel * deltaTime;
 

@@ -23,14 +23,27 @@ struct PlayerMovementComponent{
 struct PhysicsComponent{
 	bool useGravity;
 	bool isKinematic;
-    glm::vec3 sumForces;
-	glm::vec3 velocity;
-	glm::vec3 acceleration;
-	float mass;
+    glm::vec3 sumForces = {0.0f, 0.0f, 0.0f};
+	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
+	glm::vec3 acceleration = {0.0f, 0.0f, 0.0f};
+	float mass = 1;
+	float invMass = 1;
+	float restitutionCoefficient = 0;
 
-    glm::vec3 sumTorques;
-	glm::vec3 angularVelocity;
-	glm::vec3 angularAcceleration;
+    glm::vec3 sumTorques = {0.0f, 0.0f, 0.0f};
+	glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
+	glm::vec3 angularAcceleration = {0.0f, 0.0f, 0.0f};
+};
+
+struct ColliderComponent{
+	bool isTrigger;
+	glm::vec3 boxMin = {0.0f, 0.0f, 0.0f};
+	glm::vec3 boxMax = {0.0f, 0.0f, 0.0f};
+	float sphereRadius;
+
+	set<int> collisionEnter;
+	set<int> collisionStay;
+	set<int> collisionExit;
 };
 
 #endif
