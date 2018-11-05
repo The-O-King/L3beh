@@ -28,7 +28,17 @@ void CollisionSystem::update(float deltaTime){
             float distBtwnObjects = FLT_MAX;
             collisionInfo res;
             if (cc1.boxMin != cc1.boxMax && cc2.boxMin != cc2.boxMax){
-                //AABB va AABB
+                glm::vec3 trueMin1 = tc2.worldPosition - cc1.boxMin;
+                glm::vec3 trueMax1 = tc2.worldPosition + cc1.boxMax;
+                glm::vec3 trueMin2 = tc2.worldPosition - cc2.boxMin;
+                glm::vec3 trueMax2 = tc2.worldPosition + cc2.boxMax;
+
+                if ((trueMin1.x <= trueMax2.x && trueMax1.x >= trueMin2.x) &&
+                    (trueMin1.y <= trueMax2.y && trueMax1.y >= trueMin2.y) &&
+                    (trueMin1.z <= trueMax2.z && trueMax1.z >= trueMin2.z)){
+                        // collision occurred
+                        // get penetration dist and collision normal
+                    }
             }
             else if(cc1.sphereRadius != 0 && cc2.sphereRadius != 0){
                 float totalR = cc1.sphereRadius + cc2.sphereRadius;
@@ -41,7 +51,30 @@ void CollisionSystem::update(float deltaTime){
                 }
             }
             else {
-                // Sphere vs AABB collision check
+                glm::vec3 trueMin;
+                glm::vec3 trueMax;
+                glm::vec3 trueCenter;
+                float trueRadius;
+                float swap = 1;
+                if (cc1.sphereRadius != 0){
+                    trueMin = tc2.worldPosition + cc2.boxMin; trueMax = tc2.worldPosition + cc2.boxMax;
+                    trueCenter = tc1.worldPosition;
+                    trueRadius = cc1.sphereRadius;
+                }
+                else {
+                    trueMin = tc1.worldPosition + cc1.boxMin; trueMax = tc1.worldPosition + cc1.boxMax;
+                    trueCenter = tc2.worldPosition;
+                    trueRadius = cc2.sphereRadius;
+                    swap = -1;
+                }
+
+                glm::vec3 p = glm::clamp(trueCenter, trueMin, trueMax);
+                float distance = glm::distance(p, trueCenter);
+                if (distance < trueRadius){
+                    collided = true;
+                    res.normal = swap * glm::normalize(trueCenter - p);
+                    res.penetrationDist = abs(distance - trueRadius);
+                }
             }
 
             if (collided){  
