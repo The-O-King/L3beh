@@ -1,21 +1,21 @@
 Entity NAMEHERE
-PlayerMovement 1
 Physics 1 0 1 .5
 Collider 0 0 0 0 0 0 0 1
 Transform 0    0 5 -10   0 0 0  1 1 1
-Render cSphere.obj cube.vert cube.frag 
+Render cSphere.obj cube.vert cube.frag cube.jpg
 /Entity
 
 Entity NAMEHERE
-Physics 1 0 1 .5
+PlayerMovement 1
+Physics 0 1 1 .5
 Collider 0 0 0 0 0 0 0 1
 Transform 0    0 0 -10   0 0 0  1 1 1
-Render cSphere.obj cube.vert cube.frag 
+Render cSphere.obj cube.vert cube.frag cube.jpg
 /Entity
 
 Entity NAMEHERE
 Physics 0 1 1 1
-Collider 0 -5 -1 -5 5 1 5 0
+Collider 0 -5 -.5 -5 5 .5 5 0
 Transform 0    0 -5 -10   0 0 0  10 1 10
-Render cube.obj cube.vert cube.frag 
+Render cube.obj cube.vert cube.frag cube.jpg
 /Entity

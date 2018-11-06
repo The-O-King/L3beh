@@ -1,8 +1,12 @@
 #version 330 core
 
 in vec3 fragPos;
+in vec2 fragTexCoord;
+in vec3 fragNormal;
 out vec4 FragColor;
 
+uniform sampler2D texture;
+
 void main(){
-    FragColor = vec4(fragPos.z/5.0, fragPos.z/5.0, fragPos.z/5.0, 1.0f);
+    FragColor = texture(texture, fragTexCoord);
 }

@@ -10,10 +10,14 @@ struct RenderComponent{
 	string vertShaderFileName;
 	string fragShaderFileName;
 	string modelFileName;
+	string textureName;
 
-	unsigned int vbo = 0;
+	unsigned int vertex_vbo = 0;
+	unsigned int texCoord_vbo = 0;
+	unsigned int normal_vbo = 0;
     unsigned int numVert = 0;
 	unsigned int program = 0;
+	unsigned int texture = 0;
 };
 
 struct PlayerMovementComponent{
