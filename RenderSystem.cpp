@@ -22,7 +22,7 @@ RenderSystem::RenderSystem(World* w){
 void RenderSystem::init(){
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-    glViewport(0, 0, 640, 480);
+    glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glClearColor(.2f, .5f, .3f, 1.0);
 }
@@ -42,7 +42,7 @@ void RenderSystem::update(float deltaTime){
         model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
 
         glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(0,0,-2));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)1280 / (float)720, 0.1f, 100.0f);
         glm::mat4 mvp = projection * view * model;
 
         glUseProgram(rc.program);

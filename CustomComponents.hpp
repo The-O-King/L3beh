@@ -24,9 +24,15 @@ struct PlayerMovementComponent{
 	bool active;
 };
 
+enum PhysicsType{
+	STATIC = 0,
+	KINEMATIC = 1,
+	DYNAMIC = 2
+};
+
 struct PhysicsComponent{
-	bool useGravity;
-	bool isKinematic;
+	int type = 2;
+	float gravityScale = 1;
     glm::vec3 sumForces = {0.0f, 0.0f, 0.0f};
 	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
 	glm::vec3 acceleration = {0.0f, 0.0f, 0.0f};

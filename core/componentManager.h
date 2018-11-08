@@ -92,7 +92,7 @@ template <class T>
 T& ComponentManager::getComponent(int entityID){
     int compID = type_id<T>();
     std::vector<T>* allComponents = (std::vector<T>*)componentHolder[compID];
-    return (*allComponents)[entityDict[compID][entityID]];
+    return (*allComponents)[entityDict[compID].at(entityID)];
 }
 
 template <class T>

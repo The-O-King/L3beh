@@ -33,7 +33,7 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     }
     else if (command == "Physics"){
         PhysicsComponent pc;
-        data >> pc.useGravity >> pc.isKinematic >> pc.mass >> pc.restitutionCoefficient;
+        data >> pc.type >> pc.gravityScale >> pc.mass >> pc.restitutionCoefficient;
         if (pc.mass <= 0)  pc.mass = 0.000001;
         pc.invMass = 1/pc.mass;
         addComponentToEntity<PhysicsComponent>(entityID, pc);
