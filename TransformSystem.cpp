@@ -7,7 +7,9 @@
 
 TransformSystem::TransformSystem(World* w){
     mWorld = w;
-    neededComponents[type_id<TransformComponent>()] = 1;
+    componentSignature main;
+    main[type_id<TransformComponent>()] = 1;
+    neededComponentSignatures.push_back(main);
 }
 
 void TransformSystem::init(){

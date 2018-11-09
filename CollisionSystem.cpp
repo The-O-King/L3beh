@@ -6,8 +6,10 @@
 
 CollisionSystem::CollisionSystem(World* w){
     mWorld = w;
-    neededComponents[type_id<TransformComponent>()] = 1;
-    neededComponents[type_id<ColliderComponent>()] = 1;
+    componentSignature main;
+    main[type_id<TransformComponent>()] = 1;
+    main[type_id<ColliderComponent>()] = 1;
+    neededComponentSignatures.push_back(main);
 }
 
 void CollisionSystem::init(){
@@ -88,15 +90,15 @@ void CollisionSystem::update(float deltaTime){
                     cc2.collisionStay.insert(entityList[x]);
                     cc1.collisionEnter.erase(historyEnter);
                     cc2.collisionEnter.erase(cc2.collisionEnter.find(entityList[x]));
-                    std::cout << "Enter to Stay" << std::endl;
+                    //std::cout << "Enter to Stay" << std::endl;
                 }
                 else if (historyStay != cc1.collisionStay.end()){
-                    std::cout << "Stay to Stay" << std::endl;
+                    //std::cout << "Stay to Stay" << std::endl;
                 }
                 else{
                     cc1.collisionEnter.insert(entityList[y]);
                     cc2.collisionEnter.insert(entityList[x]);
-                    std::cout << "Enter" << std::endl;
+                    //std::cout << "Enter" << std::endl;
                 }
 
                 if (cc1.isTrigger || cc2.isTrigger || (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::KINEMATIC))
@@ -156,32 +158,32 @@ void CollisionSystem::update(float deltaTime){
                         cc2.collisionStay.insert(entityList[x]);
                         cc1.collisionEnter.erase(historyEnter);
                         cc2.collisionEnter.erase(cc2.collisionEnter.find(entityList[x]));
-                        std::cout << "Enter to Stay" << std::endl;
+                        //std::cout << "Enter to Stay" << std::endl;
                     }
                     else{
                         cc1.collisionExit.insert(entityList[y]);
                         cc2.collisionExit.insert(entityList[x]);
                         cc1.collisionEnter.erase(historyEnter);
                         cc2.collisionEnter.erase(cc2.collisionEnter.find(entityList[x]));
-                        std::cout << "Enter to Exit" << std::endl;   
+                        //std::cout << "Enter to Exit" << std::endl;   
                     }
                 }
                 else if (historyStay != cc1.collisionStay.end()){
                     if (distBtwnObjects < .00005){
-                        std::cout << "Stay to Stay" << std::endl;
+                        //std::cout << "Stay to Stay" << std::endl;
                     }
                     else{
                         cc1.collisionExit.insert(entityList[y]);
                         cc2.collisionExit.insert(entityList[x]);
                         cc1.collisionStay.erase(historyStay);
                         cc2.collisionStay.erase(cc2.collisionStay.find(entityList[x])); 
-                        std::cout << "Stay to Exit" << std::endl;  
+                        //std::cout << "Stay to Exit" << std::endl;  
                     }
                 }
                 else if (historyExit != cc1.collisionExit.end()){
                     cc1.collisionExit.erase(historyExit);
                     cc2.collisionExit.erase(cc2.collisionExit.find(entityList[x])); 
-                    std::cout << "Post Exit" << std::endl;                 
+                    //std::cout << "Post Exit" << std::endl;                 
                 }
             }
         }

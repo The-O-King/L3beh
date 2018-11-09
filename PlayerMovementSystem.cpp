@@ -7,8 +7,10 @@
 
 PlayerMovementSystem::PlayerMovementSystem(World* w){
     mWorld = w;
-    neededComponents[type_id<TransformComponent>()] = 1;
-    neededComponents[type_id<PlayerMovementComponent>()] = 1;
+    componentSignature main;
+    main[type_id<TransformComponent>()] = 1;
+    main[type_id<PlayerMovementComponent>()] = 1;
+    neededComponentSignatures.push_back(main);
 }
 
 void PlayerMovementSystem::init(){

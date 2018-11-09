@@ -15,8 +15,10 @@
 
 RenderSystem::RenderSystem(World* w){
     mWorld = w;
-    neededComponents[type_id<TransformComponent>()] = 1;
-    neededComponents[type_id<RenderComponent>()] = 1;
+    componentSignature main;
+    main[type_id<TransformComponent>()] = 1;
+    main[type_id<RenderComponent>()] = 1;
+    neededComponentSignatures.push_back(main);
 }
 
 void RenderSystem::init(){
@@ -67,17 +69,18 @@ void RenderSystem::update(float deltaTime){
 }
 
 void RenderSystem::loadModel(RenderComponent& rc){
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec2> texCoords;
-    std::vector<glm::vec3> normals;
-    loadOBJ(rc.modelFileName.c_str(), vertices, texCoords, normals);
-
     if (loadedVertexBuffers.find(rc.modelFileName) == loadedVertexBuffers.end()){
+        std::vector<glm::vec3> vertices;
+        std::vector<glm::vec2> texCoords;
+        std::vector<glm::vec3> normals;
+        loadOBJ(rc.modelFileName.c_str(), vertices, texCoords, normals);
+
         GLuint VBO;
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
         loadedVertexBuffers[rc.modelFileName] = VBO;
+        loadedVertexBuffersTris[rc.modelFileName] = vertices.size();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glGenBuffers(1, &VBO);
@@ -95,7 +98,7 @@ void RenderSystem::loadModel(RenderComponent& rc){
     rc.vertex_vbo = loadedVertexBuffers[rc.modelFileName];
     rc.texCoord_vbo = loadedTexCoordBuffers[rc.modelFileName];
     rc.normal_vbo = loadedNormalBuffers[rc.modelFileName];
-    rc.numVert = vertices.size();
+    rc.numVert = loadedVertexBuffersTris[rc.modelFileName];
 
     if (loadedShaderPrograms.find(rc.vertShaderFileName+rc.fragShaderFileName) == loadedShaderPrograms.end()){
         GLuint program = loadShaders(rc.vertShaderFileName.c_str(), rc.fragShaderFileName.c_str());

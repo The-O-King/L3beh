@@ -3,7 +3,7 @@
 
 #include <string>
 #include "glm/vec3.hpp"
-#include <vector>
+#include <set>
 using namespace std;
 
 struct TransformComponent{
@@ -18,7 +18,7 @@ struct TransformComponent{
 	glm::vec3 worldScale = {0.0f, 0.0f, 0.0f};
 
 	int parentEntity = -1;
-	vector<int> childEntities;
+	set<int> childEntities;
 };
 
 #endif

@@ -19,6 +19,7 @@ class World{
         std::vector<System*> mSystems;
         ComponentManager mComponents;
         std::unordered_map<int, componentSignature> liveEntities;
+        std::vector<int> entitiesToDestroy;
         
     public:
         World();
@@ -26,6 +27,7 @@ class World{
         virtual bool customWorldGen(int entityID, std::string command, std::istringstream& data);
         int createEntity();
         void destroyEntity(int entityID);
+        void destroyEntities();
         std::vector<System*>& getSystems();
 
         template <class T>
@@ -49,8 +51,13 @@ void World::addComponentToEntity(int entityID){
     liveEntities[entityID].flip(ID);
 
     for (System* s : mSystems){
-        if ((s->getNeededComponents() & liveEntities[entityID]) == s->getNeededComponents())
-            s->addEntity(entityID);
+        std::vector<componentSignature> currSigs = s->getNeededComponents();
+        for (componentSignature sig : currSigs){
+            if ((sig & liveEntities[entityID]) == sig){
+                s->addEntity(entityID, sig);
+                break;
+            }
+        }
     }
 
     mComponents.addComponent<T>(entityID);
@@ -62,8 +69,13 @@ void World::addComponentToEntity(int entityID, T componentData){
     liveEntities[entityID].flip(ID);
 
     for (System* s : mSystems){
-        if ((s->getNeededComponents() & liveEntities[entityID]) == s->getNeededComponents())
-            s->addEntity(entityID);
+        std::vector<componentSignature> currSigs = s->getNeededComponents();
+        for (componentSignature sig : currSigs){
+            if ((sig & liveEntities[entityID]) == sig){
+                s->addEntity(entityID, sig);
+                break;
+            }
+        }
     }
 
     mComponents.addComponent<T>(entityID, componentData);
@@ -72,15 +84,18 @@ void World::addComponentToEntity(int entityID, T componentData){
 template <class T>
 void World::removeComponentFromEntity(int entityID){
     int ID = type_id<T>();
-    liveEntities[entityID].reset(ID);
 
     for (System* s : mSystems){
-        if ((s->getNeededComponents() & liveEntities[entityID]) == s->getNeededComponents())
-            s->addEntity(entityID);
-        else
-            s->removeEntity(entityID);
+        std::vector<componentSignature> currSigs = s->getNeededComponents();
+        for (componentSignature sig : currSigs){
+            if (((sig & liveEntities[entityID]) == sig) && sig.test(ID)){
+                s->removeEntity(entityID);
+                break;
+            }
+        }
     }
 
+    liveEntities[entityID].reset(ID);
     mComponents.removeComponent<T>(entityID);
 }
 

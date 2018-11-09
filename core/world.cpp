@@ -39,7 +39,7 @@ bool World::baseWorldGen(std::string worldConfigFile){
                     tc.scale = glm::vec3(xs, ys, zs);
                     tc.parentEntity = parent;
                     TransformComponent& parentTransform = getComponent<TransformComponent>(parent);
-                    parentTransform.childEntities.push_back(baby);
+                    parentTransform.childEntities.insert(baby);
                     addComponentToEntity<TransformComponent>(baby, tc);
                 }
                 else{
@@ -64,19 +64,30 @@ int World::createEntity(){
     return newID;
 }
 
-void World::destroyEntity(int entityID){
-    vector<int> destroyList;
-    destroyList.push_back(entityID);
-    while (!destroyList.empty()){
-        int currDestroy = destroyList.back(); destroyList.pop_back();
-        vector<int> toAdd = getComponent<TransformComponent>(currDestroy).childEntities;
-        destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
+void World::destroyEntities(){
+    for (int entityID : entitiesToDestroy){
+        vector<int> destroyList;
+        destroyList.push_back(entityID);
+        int parentID = getComponent<TransformComponent>(entityID).parentEntity;
+        TransformComponent& parentTC = getComponent<TransformComponent>(parentID);
+        parentTC.childEntities.erase(entityID);
+        while (!destroyList.empty()){
+            int currDestroy = destroyList.back(); destroyList.pop_back();
+            set<int> toAdd = getComponent<TransformComponent>(currDestroy).childEntities;
+            destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
 
-        componentSignature toDestroy = liveEntities[currDestroy];
-        for (System* s : mSystems){
-            s->removeEntity(currDestroy);
+            componentSignature toDestroy = liveEntities[currDestroy];
+            for (System* s : mSystems){
+                s->removeEntity(currDestroy);
+            }
+            mComponents.destroyEntity(entityID, toDestroy);
+            liveEntities.erase(currDestroy);
         }
-        mComponents.destroyEntity(entityID, toDestroy);
-        liveEntities.erase(currDestroy);
     }
+    entitiesToDestroy.clear();
+}
+
+void World::destroyEntity(int entityID){
+    if (liveEntities.find(entityID) != liveEntities.end())
+        entitiesToDestroy.push_back(entityID);
 }

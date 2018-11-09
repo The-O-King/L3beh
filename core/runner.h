@@ -63,6 +63,7 @@ inline int run(World& gameWorld, std::string worldConfigFile)
             s->update(deltaTime);
         }
         glfwSwapBuffers(window);
+        gameWorld.destroyEntities();
         Input::resetKeyState();
 
         /* Poll for and process events */
