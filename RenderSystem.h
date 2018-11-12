@@ -14,11 +14,16 @@ class RenderSystem : public System{
         std::unordered_map<std::string, GLuint> loadedNormalBuffers;
         std::unordered_map<std::string, GLuint> loadedTextures;
         GLuint vao;
+
+        std::set<int> renderableEntities;
+        std::set<int> cameraEntities;
         
     public:
         RenderSystem(World* w);
         void init() override;
         void update(float deltaTime) override;
+        void addEntity(int entityID, componentSignature sig) override;
+        void removeEntity(int entityID) override;
         void loadModel(RenderComponent& tc);
 };
 

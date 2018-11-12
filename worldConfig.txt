@@ -1,3 +1,11 @@
+Entity Player
+PlayerMovement 1
+Physics 1 0 1 1
+Collider 0 0 0 0 0 0 0 1
+Transform 0    0 0 -2   0 0 0  1 1 1
+Camera 1 90
+/Entity
+
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
@@ -86,12 +94,12 @@ Render cSphere.obj cube.vert cube.frag cube.jpg
 /Entity
 
 
-Entity PlayerBall
-PlayerMovement 1
-Physics 1 0 1 1
-Collider 0 0 0 0 0 0 0 1
-Transform 0    0 0 -10   0 0 0  1 1 1
-Render cSphere.obj cube.vert cube.frag cube.jpg
+/Entity PlayerBall
+/PlayerMovement 1
+/Physics 1 0 1 1
+/Collider 0 0 0 0 0 0 0 1
+/Transform 0    0 0 -10   0 0 0  1 1 1
+/Render cSphere.obj cube.vert cube.frag cube.jpg
 /Entity
 
 Entity Floor

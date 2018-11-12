@@ -18,6 +18,7 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<PlayerMovementComponent>();
     mComponents.registerComponent<PhysicsComponent>();
     mComponents.registerComponent<ColliderComponent>();
+    mComponents.registerComponent<CameraComponent>();
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
@@ -42,6 +43,11 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         ColliderComponent cc;
         data >> cc.isTrigger >> cc.boxMin.x >> cc.boxMin.y >> cc.boxMin.z >> cc.boxMax.x >> cc.boxMax.y >> cc.boxMax.z >> cc.sphereRadius;
         addComponentToEntity<ColliderComponent>(entityID, cc);
+    }
+    else if (command == "Camera"){
+        CameraComponent cc;
+        data >> cc.isActive >> cc.fov;
+        addComponentToEntity<CameraComponent>(entityID, cc);
     }
     return true;
 }

@@ -15,10 +15,14 @@
 
 RenderSystem::RenderSystem(World* w){
     mWorld = w;
-    componentSignature main;
-    main[type_id<TransformComponent>()] = 1;
-    main[type_id<RenderComponent>()] = 1;
-    neededComponentSignatures.push_back(main);
+    componentSignature objRenderer;
+    objRenderer[type_id<TransformComponent>()] = 1;
+    objRenderer[type_id<RenderComponent>()] = 1;
+    neededComponentSignatures.push_back(objRenderer);
+    componentSignature cameras;
+    cameras[type_id<TransformComponent>()] = 1;
+    cameras[type_id<CameraComponent>()] = 1;
+    neededComponentSignatures.push_back(cameras);
 }
 
 void RenderSystem::init(){
@@ -29,8 +33,36 @@ void RenderSystem::init(){
     glClearColor(.2f, .5f, .3f, 1.0);
 }
 
+void RenderSystem::addEntity(int entityID, componentSignature sig){
+    if (sig == neededComponentSignatures[0])
+        renderableEntities.insert(entityID);
+    else
+        cameraEntities.insert(entityID);
+}
+
+void RenderSystem::removeEntity(int entityID){
+    cameraEntities.erase(entityID);
+    renderableEntities.erase(entityID);
+}
+
 void RenderSystem::update(float deltaTime){
-    for (int e : entities){
+    glm::mat4 view;
+    glm::mat4 projection;
+    for (int e : cameraEntities){
+        CameraComponent cc = mWorld->getComponent<CameraComponent>(e);
+        if (cc.isActive){
+            TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
+            view = glm::translate(glm::mat4(1.0), tc.worldPosition);
+            view = glm::scale(view, tc.worldScale);
+            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
+            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));   
+            view = glm::inverse(view);
+            projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 100.0f);
+        }
+    }
+
+    for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
         if (!rc.initialized){
@@ -43,8 +75,6 @@ void RenderSystem::update(float deltaTime){
         model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
         model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
 
-        glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(0,0,-2));
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)1280 / (float)720, 0.1f, 100.0f);
         glm::mat4 mvp = projection * view * model;
 
         glUseProgram(rc.program);

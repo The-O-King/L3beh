@@ -56,4 +56,9 @@ struct ColliderComponent{
 	set<int> collisionExit;
 };
 
+struct CameraComponent{
+	bool isActive;
+	float fov;
+};
+
 #endif
