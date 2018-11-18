@@ -6,7 +6,6 @@
 using namespace std;
 
 struct RenderComponent{
-	bool initialized = false;
 	string vertShaderFileName;
 	string fragShaderFileName;
 	string modelFileName;

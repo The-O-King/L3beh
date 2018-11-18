@@ -34,8 +34,10 @@ void RenderSystem::init(){
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
-    if (sig == neededComponentSignatures[0])
+    if (sig == neededComponentSignatures[0]){
         renderableEntities.insert(entityID);
+        loadModel(mWorld->getComponent<RenderComponent>(entityID));
+    }
     else
         cameraEntities.insert(entityID);
 }
@@ -65,9 +67,6 @@ void RenderSystem::update(float deltaTime){
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
-        if (!rc.initialized){
-            loadModel(rc);
-        }
         
         glm::mat4 model = glm::translate(glm::mat4(1.0), tc.worldPosition);
         model = glm::scale(model, tc.worldScale);
@@ -84,13 +83,13 @@ void RenderSystem::update(float deltaTime){
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindBuffer(GL_ARRAY_BUFFER, rc.vertex_vbo);  
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,0, (void*)0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, rc.texCoord_vbo);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, rc.normal_vbo);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5*sizeof(float)));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(2);
         GLuint MatrixID = glGetUniformLocation(rc.program, "MVP");
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
@@ -150,5 +149,4 @@ void RenderSystem::loadModel(RenderComponent& rc){
         stbi_image_free(data);
     }
     rc.texture = loadedTextures[rc.textureName];
-    rc.initialized = true;
 }

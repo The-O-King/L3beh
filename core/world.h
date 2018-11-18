@@ -49,6 +49,7 @@ template <class T>
 void World::addComponentToEntity(int entityID){
     int ID = type_id<T>();
     liveEntities[entityID].flip(ID);
+    mComponents.addComponent<T>(entityID);
 
     for (System* s : mSystems){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
@@ -59,14 +60,13 @@ void World::addComponentToEntity(int entityID){
             }
         }
     }
-
-    mComponents.addComponent<T>(entityID);
 }
 
 template <class T>
 void World::addComponentToEntity(int entityID, T componentData){
     int ID = type_id<T>();
     liveEntities[entityID].flip(ID);
+    mComponents.addComponent<T>(entityID, componentData);
 
     for (System* s : mSystems){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
@@ -77,13 +77,13 @@ void World::addComponentToEntity(int entityID, T componentData){
             }
         }
     }
-
-    mComponents.addComponent<T>(entityID, componentData);
 }
 
 template <class T>
 void World::removeComponentFromEntity(int entityID){
     int ID = type_id<T>();
+    liveEntities[entityID].reset(ID);
+    mComponents.removeComponent<T>(entityID);
 
     for (System* s : mSystems){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
@@ -94,9 +94,6 @@ void World::removeComponentFromEntity(int entityID){
             }
         }
     }
-
-    liveEntities[entityID].reset(ID);
-    mComponents.removeComponent<T>(entityID);
 }
 
 template <class T>
