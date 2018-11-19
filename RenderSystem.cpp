@@ -31,6 +31,7 @@ void RenderSystem::init(){
     glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glClearColor(.2f, .5f, .3f, 1.0);
+    program = loadShaders("cube.vert", "cube.frag");
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
@@ -39,7 +40,7 @@ void RenderSystem::addEntity(int entityID, componentSignature sig){
         loadModel(mWorld->getComponent<RenderComponent>(entityID));
     }
     else
-        cameraEntities.insert(entityID);
+        cameraEntities.insert(entityID);        
 }
 
 void RenderSystem::removeEntity(int entityID){
@@ -64,6 +65,9 @@ void RenderSystem::update(float deltaTime){
         }
     }
 
+    glUseProgram(program);
+    GLuint mvpID = glGetUniformLocation(program, "MVP");
+    GLuint invTID = glGetUniformLocation(program, "invTranspose");
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
@@ -75,8 +79,8 @@ void RenderSystem::update(float deltaTime){
         model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
 
         glm::mat4 mvp = projection * view * model;
+        glm::mat3 invT = glm::transpose(glm::inverse(model));
 
-        glUseProgram(rc.program);
         glBindTexture(GL_TEXTURE_2D, rc.texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -91,8 +95,8 @@ void RenderSystem::update(float deltaTime){
         glBindBuffer(GL_ARRAY_BUFFER, rc.normal_vbo);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(2);
-        GLuint MatrixID = glGetUniformLocation(rc.program, "MVP");
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix3fv(invTID, 1, GL_FALSE, &invT[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, rc.numVert);
     }
 }
@@ -128,12 +132,6 @@ void RenderSystem::loadModel(RenderComponent& rc){
     rc.texCoord_vbo = loadedTexCoordBuffers[rc.modelFileName];
     rc.normal_vbo = loadedNormalBuffers[rc.modelFileName];
     rc.numVert = loadedVertexBuffersTris[rc.modelFileName];
-
-    if (loadedShaderPrograms.find(rc.vertShaderFileName+rc.fragShaderFileName) == loadedShaderPrograms.end()){
-        GLuint program = loadShaders(rc.vertShaderFileName.c_str(), rc.fragShaderFileName.c_str());
-        loadedShaderPrograms[rc.vertShaderFileName+rc.fragShaderFileName] = program;
-    }
-    rc.program = loadedShaderPrograms[rc.vertShaderFileName+rc.fragShaderFileName];
 
     if (loadedTextures.find(rc.textureName) == loadedTextures.end()){
         GLuint texID;

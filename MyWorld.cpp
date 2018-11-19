@@ -24,7 +24,7 @@ MyWorld::MyWorld(){
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
     if (command == "Render"){
         RenderComponent rc;
-        data >> rc.modelFileName >> rc.vertShaderFileName >> rc.fragShaderFileName >> rc.textureName;
+        data >> rc.modelFileName >> rc.textureName;
         addComponentToEntity<RenderComponent>(entityID, rc);
     }
     else if (command == "PlayerMovement"){
