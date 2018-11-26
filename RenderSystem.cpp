@@ -19,10 +19,16 @@ RenderSystem::RenderSystem(World* w){
     objRenderer[type_id<TransformComponent>()] = 1;
     objRenderer[type_id<RenderComponent>()] = 1;
     neededComponentSignatures.push_back(objRenderer);
+
     componentSignature cameras;
     cameras[type_id<TransformComponent>()] = 1;
     cameras[type_id<CameraComponent>()] = 1;
     neededComponentSignatures.push_back(cameras);
+
+    componentSignature pointLightEntities;
+    pointLightEntities[type_id<PointLightComponent>()] = 1;
+    pointLightEntities[type_id<TransformComponent>()] = 1;
+    neededComponentSignatures.push_back(pointLightEntities);
 }
 
 void RenderSystem::init(){
@@ -39,22 +45,28 @@ void RenderSystem::addEntity(int entityID, componentSignature sig){
         renderableEntities.insert(entityID);
         loadModel(mWorld->getComponent<RenderComponent>(entityID));
     }
-    else
-        cameraEntities.insert(entityID);        
+    else if (sig == neededComponentSignatures[1])
+        cameraEntities.insert(entityID);
+    else if (sig == neededComponentSignatures[2])
+        pointLightEntities.insert(entityID);
 }
 
 void RenderSystem::removeEntity(int entityID){
     cameraEntities.erase(entityID);
     renderableEntities.erase(entityID);
+    pointLightEntities.erase(entityID);
+
 }
 
 void RenderSystem::update(float deltaTime){
+    glm::vec3 cameraPos;
     glm::mat4 view;
     glm::mat4 projection;
     for (int e : cameraEntities){
         CameraComponent cc = mWorld->getComponent<CameraComponent>(e);
         if (cc.isActive){
             TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
+            cameraPos = tc.worldPosition;
             view = glm::translate(glm::mat4(1.0), tc.worldPosition);
             view = glm::scale(view, tc.worldScale);
             view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
@@ -68,6 +80,23 @@ void RenderSystem::update(float deltaTime){
     glUseProgram(program);
     GLuint mvpID = glGetUniformLocation(program, "MVP");
     GLuint invTID = glGetUniformLocation(program, "invTranspose");
+    GLuint modelID = glGetUniformLocation(program, "model");
+    GLuint cameraPosID = glGetUniformLocation(program, "cameraPos");
+    glUniform3f(cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
+    int count = 0;
+    for (int e : pointLightEntities){
+        GLuint pos = glGetUniformLocation(program, ("pointLights[" + to_string(count) + "].position").c_str());
+        TransformComponent &tc = mWorld->getComponent<TransformComponent>(e);
+        glUniform3f(pos, tc.worldPosition.x, tc.worldPosition.y, tc.worldPosition.z);
+        pos = glGetUniformLocation(program, ("pointLights[" + to_string(count) + "].color").c_str());
+        PointLightComponent &pc = mWorld->getComponent<PointLightComponent>(e);
+        glUniform3f(pos, pc.color.r, pc.color.g, pc.color.b);
+        pos = glGetUniformLocation(program, ("pointLights[" + to_string(count++) + "].intensity").c_str());
+        glUniform1f(pos, pc.intensity);
+    }
+    GLuint numPointLightID = glGetUniformLocation(program, "numPointLight");
+    glUniform1i(numPointLightID, count);
+
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
@@ -96,6 +125,7 @@ void RenderSystem::update(float deltaTime){
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(2);
         glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
         glUniformMatrix3fv(invTID, 1, GL_FALSE, &invT[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, rc.numVert);
     }

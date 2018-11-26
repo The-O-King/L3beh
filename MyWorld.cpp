@@ -19,6 +19,7 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<PhysicsComponent>();
     mComponents.registerComponent<ColliderComponent>();
     mComponents.registerComponent<CameraComponent>();
+    mComponents.registerComponent<PointLightComponent>();
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
@@ -48,6 +49,11 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         CameraComponent cc;
         data >> cc.isActive >> cc.fov;
         addComponentToEntity<CameraComponent>(entityID, cc);
+    }
+    else if (command == "PointLight"){
+        PointLightComponent pc;
+        data >> pc.intensity >> pc.color.r >> pc.color.g >> pc.color.b;
+        addComponentToEntity<PointLightComponent>(entityID, pc);
     }
     return true;
 }

@@ -57,4 +57,9 @@ struct CameraComponent{
 	float fov;
 };
 
+struct PointLightComponent{
+	float intensity = 0.0f;
+	glm::vec3 color = {0.0f, 0.0f, 0.0f};
+};
+
 #endif

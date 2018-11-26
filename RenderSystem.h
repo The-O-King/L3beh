@@ -16,6 +16,7 @@ class RenderSystem : public System{
         GLuint program;
 
         std::set<int> renderableEntities;
+        std::set<int> pointLightEntities;
         std::set<int> cameraEntities;
         
     public:
