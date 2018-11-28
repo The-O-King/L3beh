@@ -25,7 +25,7 @@ MyWorld::MyWorld(){
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
     if (command == "Render"){
         RenderComponent rc;
-        data >> rc.modelFileName >> rc.textureName;
+        data >> rc.modelFileName >> rc.textureName >> rc.diffuse.r >> rc.diffuse.g >> rc.diffuse.b >> rc.specular.r >> rc.specular.g >> rc.specular.b >> rc.shininess;
         addComponentToEntity<RenderComponent>(entityID, rc);
     }
     else if (command == "PlayerMovement"){

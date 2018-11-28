@@ -20,63 +20,63 @@ Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    0 5 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    0 4 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    0 3 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    .01 2 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    .01 2 -10.1   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    .01 2 -9.9   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    .01 2 -11  0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    .01 2 -12   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    -1 2 -12   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 
@@ -84,7 +84,7 @@ Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    -2 2 -12   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 
@@ -92,7 +92,7 @@ Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    -3 2 -12   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 
@@ -100,7 +100,7 @@ Entity PhysicsBall
 Physics 2 1 1 1
 Collider 0 0 0 0 0 0 0 1
 Transform 0    -3.5 2 -12   0 0 0  1 1 1
-Render cSphere.obj cube.jpg
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 
@@ -109,47 +109,47 @@ Render cSphere.obj cube.jpg
 /Physics 1 0 1 1
 /Collider 0 0 0 0 0 0 0 1
 /Transform 0    0 0 -10   0 0 0  1 1 1
-/Render cSphere.obj cube.jpg
+/Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity Floor
 Physics 0 0 1 1
 Collider 0    -5 -.5 -5   5 .5 5    0
 Transform 0    0 -5 -10   0 0 0  10 1 10
-Render cube.obj cube.jpg
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity Ceiling
 Physics 0 0 1 1
 Collider 0    -5 -.5 -5   5 .5 5    0
 Transform 0    0 5 -10   0 0 0  10 1 10
-Render cube.obj cube.jpg
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallLeft
 Physics 0 0 1 1
 Collider 0     -.5 -5 -5   .5 5 5   0
 Transform 0    -5 -1 -10   0 0 0  1 10 10
-Render cube.obj cube.jpg
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallRight
 Physics 0 0 1 1
 Collider 0     -.5 -5 -5   .5 5 5   0
 Transform 0    5 -1 -10   0 0 0  1 10 10
-Render cube.obj cube.jpg
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallBack
 Physics 0 0 1 1
 Collider 0     -5 -5 -.5   5 5 .5   0
 Transform 0    0 -1 -15   0 0 0  10 10 1
-Render cube.obj cube.jpg
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallFront
 Physics 0 0 1 1
 Collider 0     -5 -5 -.5   5 5 .5   0
 Transform 0    0 -1 -5   0 0 0  10 10 1
-//Render cube.obj cube.jpg
+//Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity

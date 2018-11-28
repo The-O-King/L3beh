@@ -1,0 +1,96 @@
+Entity Player
+PlayerMovement 1
+Physics 1 0 1 1
+Collider 0 0 0 0 0 0 0 1
+Transform 0    0 0 -2   0 0 0  1 1 1
+Camera 1 90
+/Entity
+
+Entity Light
+Transform 1    0 0 -2    0 0 0  1 1 1
+PointLight 2 1 1 1
+/Entity
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    -8 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 2
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    -6 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 4
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    -4 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 8
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    -2 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 16
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    0 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    2 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 64
+/Entity
+
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    4 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 1 1 128
+/Entity
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    6 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 1 0 0 128
+/Entity
+
+Entity PhysicsBall
+Physics 2 1 1 .75
+Collider 0 0 0 0 0 0 0 1
+Transform 0    8 5 -10   0 0 0  1 1 1
+Render cSphere.obj cube.jpg  1 1 1 0 0 1 128
+/Entity
+
+
+Entity Floor
+Physics 0 0 1 1
+Collider 0    -10 -.5 -10   10 .5 10    0
+Transform 0    0 -5 -10   0 0 0  20 1 10
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity
+
+Entity WallBack
+Physics 0 0 1 1
+Collider 0     -10 -5 -.5   10 5 .5   0
+Transform 0    0 -1 -15   0 0 0  20 10 1
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity

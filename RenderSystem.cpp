@@ -81,6 +81,10 @@ void RenderSystem::update(float deltaTime){
     GLuint mvpID = glGetUniformLocation(program, "MVP");
     GLuint invTID = glGetUniformLocation(program, "invTranspose");
     GLuint modelID = glGetUniformLocation(program, "model");
+    GLuint materialSpecID = glGetUniformLocation(program, "mat.specular");
+    GLuint materialDiffID = glGetUniformLocation(program, "mat.diffuse");
+    GLuint materialShineID = glGetUniformLocation(program, "mat.shininess");
+
     GLuint cameraPosID = glGetUniformLocation(program, "cameraPos");
     glUniform3f(cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
     int count = 0;
@@ -127,6 +131,9 @@ void RenderSystem::update(float deltaTime){
         glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
         glUniformMatrix3fv(invTID, 1, GL_FALSE, &invT[0][0]);
+        glUniform3f(materialSpecID, rc.specular.r, rc.specular.g, rc.specular.b);
+        glUniform3f(materialDiffID, rc.diffuse.r, rc.diffuse.g, rc.diffuse.b);
+        glUniform1f(materialShineID, rc.shininess);
         glDrawArrays(GL_TRIANGLES, 0, rc.numVert);
     }
 }
