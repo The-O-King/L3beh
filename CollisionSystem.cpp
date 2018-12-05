@@ -2,6 +2,7 @@
 #include "CustomComponents.hpp"
 #include "core/components.h"
 #include "core/world.h"
+#include "core/glm/gtc/matrix_transform.hpp"
 #include <iostream>
 
 CollisionSystem::CollisionSystem(World* w){
@@ -33,17 +34,100 @@ void CollisionSystem::update(float deltaTime){
             float distBtwnObjects = FLT_MAX;
             collisionInfo res;
             if (cc1.boxMin != cc1.boxMax && cc2.boxMin != cc2.boxMax){
-                glm::vec3 trueMin1 = tc2.worldPosition - cc1.boxMin;
-                glm::vec3 trueMax1 = tc2.worldPosition + cc1.boxMax;
-                glm::vec3 trueMin2 = tc2.worldPosition - cc2.boxMin;
-                glm::vec3 trueMax2 = tc2.worldPosition + cc2.boxMax;
+                glm::mat4 orientation1 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
+                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0)); 
+                glm::mat4 orientation2 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc2.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
+                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
+                OBB obb1, obb2;
+                obb1.AxisX = glm::vec3(orientation1[0]);
+                obb1.AxisY = glm::vec3(orientation1[1]);
+                obb1.AxisZ = glm::vec3(orientation1[2]);
+                obb1.Half_size = (cc1.boxMax - cc1.boxMin) * .5f;
+                obb2.AxisX = glm::vec3(orientation2[0]);
+                obb2.AxisY = glm::vec3(orientation2[1]);
+                obb2.AxisZ = glm::vec3(orientation2[2]);
+                obb2.Half_size = (cc2.boxMax - cc2.boxMin) * .5f;
 
-                if ((trueMin1.x <= trueMax2.x && trueMax1.x >= trueMin2.x) &&
-                    (trueMin1.y <= trueMax2.y && trueMax1.y >= trueMin2.y) &&
-                    (trueMin1.z <= trueMax2.z && trueMax1.z >= trueMin2.z)){
-                        // collision occurred
-                        // get penetration dist and collision normal
+                glm::vec3 RPos = tc2.worldPosition - tc1.worldPosition;
+                glm::vec3 facePlanes[6] = { obb1.AxisX, obb1.AxisY, obb1.AxisZ, obb2.AxisX, obb2.AxisY, obb2.AxisZ };
+                glm::vec3 edgePlanes[9] = { 
+                    glm::normalize(glm::cross(obb1.AxisX,obb2.AxisX)), 
+                    glm::normalize(glm::cross(obb1.AxisX,obb2.AxisY)),
+                    glm::normalize(glm::cross(obb1.AxisX,obb2.AxisZ)),
+                    glm::normalize(glm::cross(obb1.AxisY,obb2.AxisX)), 
+                    glm::normalize(glm::cross(obb1.AxisY,obb2.AxisY)), 
+                    glm::normalize(glm::cross(obb1.AxisY,obb2.AxisZ)),
+                    glm::normalize(glm::cross(obb1.AxisZ,obb2.AxisX)), 
+                    glm::normalize(glm::cross(obb1.AxisZ,obb2.AxisY)), 
+                    glm::normalize(glm::cross(obb1.AxisZ,obb2.AxisZ))
+                };
+                float faceDistances[6] = { 
+                    separatingDistance(RPos, facePlanes[0], obb1, obb2), 
+                    separatingDistance(RPos, facePlanes[1], obb1, obb2), 
+                    separatingDistance(RPos, facePlanes[2], obb1, obb2),
+                    separatingDistance(RPos, facePlanes[3], obb1, obb2),
+                    separatingDistance(RPos, facePlanes[4], obb1, obb2),
+                    separatingDistance(RPos, facePlanes[5], obb1, obb2) 
+                };
+                float edgeDistances[9] = {
+                    separatingDistance(RPos, edgePlanes[0], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[1], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[2], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[3], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[4], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[5], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[6], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[7], obb1, obb2),
+                    separatingDistance(RPos, edgePlanes[8], obb1, obb2)
+                };
+
+                float minPenetrationFace = -FLT_MAX;
+                int faceMin = 7;
+                collided = true;
+                for (int x = 0; x < 6; x++){
+                    if (faceDistances[x] > 0){
+                        collided = false;
+                        break;
                     }
+                    else if (faceDistances[x] > minPenetrationFace){
+                        collided = true;
+                        minPenetrationFace = faceDistances[x];
+                        faceMin = x;
+                    }
+                }
+
+                float minPenetrationEdge = -FLT_MAX;
+                int edgeMin = 10;
+                if (collided){
+                    for (int x = 0; x < 9; x++){
+                        if (edgeDistances[x] > 0){
+                            collided = false;
+                            break;
+                        }
+                        else if (edgeDistances[x] > minPenetrationEdge){
+                            collided = true;
+                            minPenetrationEdge = edgeDistances[x];
+                            edgeMin = x;
+                        }
+                    }
+                }
+
+                if (collided){
+                    if (minPenetrationEdge > minPenetrationFace){
+                        std::cout << "Edge Collision" << std::endl;
+                        res.normal = edgePlanes[edgeMin];
+                        res.penetrationDist = abs(minPenetrationEdge);
+                    }
+                    else{
+                        std::cout << "Face Collision" << std::endl;
+                        res.normal = facePlanes[faceMin];
+                        res.penetrationDist = abs(minPenetrationFace);
+                    }
+                    if (glm::dot(tc2.worldPosition - tc1.worldPosition, res.normal) > 0)
+                        res.normal *= -1;
+                }
             }
             else if(cc1.sphereRadius != 0 && cc2.sphereRadius != 0){
                 float totalR = cc1.sphereRadius + cc2.sphereRadius;
@@ -72,6 +156,11 @@ void CollisionSystem::update(float deltaTime){
                     trueRadius = cc2.sphereRadius;
                     swap = -1;
                 }
+
+                glm::mat4 orientation1 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
+                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0)); 
+                trueCenter = glm::transpose(glm::mat3(orientation1)) * trueCenter;
 
                 glm::vec3 p = glm::clamp(trueCenter, trueMin, trueMax);
                 float distance = glm::distance(p, trueCenter);
@@ -111,8 +200,8 @@ void CollisionSystem::update(float deltaTime){
                     tc2.position -= .8f * res.penetrationDist * res.normal;
                 }
                 else{
-                    float invMass1 = pc1.type == PhysicsType::STATIC || pc1.type == PhysicsType::KINEMATIC ? 0 : pc1.invMass;
-                    float invMass2 = pc2.type == PhysicsType::STATIC || pc2.type == PhysicsType::KINEMATIC ? 0 : pc2.invMass;
+                    float invMass1 = pc1.type != PhysicsType::DYNAMIC ? 0 : pc1.invMass;
+                    float invMass2 = pc2.type != PhysicsType::DYNAMIC ? 0 : pc2.invMass;
                     
                     glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity;
                     float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
@@ -188,4 +277,14 @@ void CollisionSystem::update(float deltaTime){
             }
         }
     }
+}
+
+float CollisionSystem::separatingDistance(const glm::vec3& RPos, const glm::vec3& Plane, const OBB& obb1, const OBB&obb2){
+    return (fabs(glm::dot(RPos,Plane))) -
+           (fabs(glm::dot((obb1.AxisX*obb1.Half_size.x),Plane)) +
+            fabs(glm::dot((obb1.AxisY*obb1.Half_size.y),Plane)) +
+            fabs(glm::dot((obb1.AxisZ*obb1.Half_size.z),Plane)) +
+            fabs(glm::dot((obb2.AxisX*obb2.Half_size.x),Plane)) + 
+            fabs(glm::dot((obb2.AxisY*obb2.Half_size.y),Plane)) +
+            fabs(glm::dot((obb2.AxisZ*obb2.Half_size.z),Plane)));
 }
