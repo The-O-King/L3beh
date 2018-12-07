@@ -4,6 +4,10 @@
 #include "core/world.h"
 #include "core/glm/gtc/matrix_transform.hpp"
 #include <iostream>
+#include <vector>
+
+#define PERCENT .95f
+#define THRESH .01f
 
 CollisionSystem::CollisionSystem(World* w){
     mWorld = w;
@@ -34,10 +38,12 @@ void CollisionSystem::update(float deltaTime){
             float distBtwnObjects = FLT_MAX;
             collisionInfo res;
             if (cc1.boxMin != cc1.boxMax && cc2.boxMin != cc2.boxMax){
-                glm::mat4 orientation1 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+                glm::mat4 orientation1 = glm::translate(glm::mat4(1.0), tc1.worldPosition);
+                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
                 orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
                 orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0)); 
-                glm::mat4 orientation2 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc2.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
+                glm::mat4 orientation2 = glm::translate(glm::mat4(1.0), tc2.worldPosition);
+                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
                 orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
                 orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
                 OBB obb1, obb2;
@@ -115,18 +121,85 @@ void CollisionSystem::update(float deltaTime){
                 }
 
                 if (collided){
-                    if (minPenetrationEdge > minPenetrationFace){
+                    if (minPenetrationEdge * .95 > minPenetrationFace + .01){
                         std::cout << "Edge Collision" << std::endl;
                         res.normal = edgePlanes[edgeMin];
+                        if (glm::dot(tc2.worldPosition - tc1.worldPosition, res.normal) < 0)
+                            res.normal *= -1;
                         res.penetrationDist = abs(minPenetrationEdge);
+                        
+                        int axisEdge1 = edgeMin / 3;
+                        int axisEdge2 = edgeMin % 3;
+                        glm::vec3 edge1[2];
+                        glm::vec3 edge2[2];
+                        getEdge(orientation1, obb1, res.normal, edge1, axisEdge1);
+                        getEdge(orientation2, obb2, -res.normal, edge2, axisEdge2);
+                        contactPoint temp;
+                        temp.point = computeContactPointEdges(edge1, edge2);
+                        temp.penetrationDist = res.penetrationDist;
+                        res.normal *= -1;
                     }
                     else{
                         std::cout << "Face Collision" << std::endl;
-                        res.normal = facePlanes[faceMin];
+                        glm::vec3 referenceFaceNormal = facePlanes[faceMin];
                         res.penetrationDist = abs(minPenetrationFace);
+                        int referenceFaceOpposite = false;
+                        if (glm::dot(tc2.worldPosition - tc1.worldPosition, referenceFaceNormal) < 0){
+                            referenceFaceNormal *= -1;
+                            referenceFaceOpposite = true;
+                        }
+
+                        glm::vec3 incidentFaceNormal;
+                        glm::vec3 incidentFaceVertices[4];
+                        glm::vec3 referenceFaceVertices[4];
+
+                        if (faceMin < 3){
+                            float min = FLT_MAX;
+                            bool opposite = false;
+                            int axis = 0;
+                            for (int x = 0; x < 3; x++){
+                                float dotRes = glm::dot(facePlanes[3+x], referenceFaceNormal);
+                                if (dotRes < min){
+                                    min = dotRes;
+                                    incidentFaceNormal = facePlanes[3+x];
+                                    opposite = false;
+                                    axis = x;
+                                }
+                                if (-dotRes < min){
+                                    min = -dotRes;
+                                    incidentFaceNormal = -facePlanes[3+x];
+                                    opposite = true;
+                                    axis = x;
+                                }
+                            }
+                            getVerticesFromFaceNormal(incidentFaceVertices, obb2, orientation2, axis, opposite);
+                            getVerticesFromFaceNormal(referenceFaceVertices, obb1, orientation1, faceMin, referenceFaceOpposite);
+                        }
+                        else{
+                            float min = FLT_MAX;
+                            bool opposite = false;
+                            int axis = 0;
+                            for (int x = 0; x < 3; x++){
+                                float dotRes = glm::dot(facePlanes[x], res.normal);
+                                if (dotRes < min){
+                                    min = dotRes;
+                                    incidentFaceNormal = facePlanes[x];
+                                    opposite = false;
+                                    axis = x;
+                                }
+                                if (-dotRes < min){
+                                    min = -dotRes;
+                                    incidentFaceNormal = -facePlanes[x];
+                                    opposite = true;
+                                    axis = x;
+                                }
+                            }
+                            getVerticesFromFaceNormal(incidentFaceVertices, obb1, orientation1, axis, opposite);
+                            getVerticesFromFaceNormal(referenceFaceVertices, obb2, orientation2, faceMin % 3, referenceFaceOpposite);                   
+                        }
+                        std::vector<contactPoint> points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
+                        res.normal = referenceFaceNormal * -1.0f;
                     }
-                    if (glm::dot(tc2.worldPosition - tc1.worldPosition, res.normal) > 0)
-                        res.normal *= -1;
                 }
             }
             else if(cc1.sphereRadius != 0 && cc2.sphereRadius != 0){
@@ -192,13 +265,16 @@ void CollisionSystem::update(float deltaTime){
 
                 if (cc1.isTrigger || cc2.isTrigger || (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::KINEMATIC))
                     continue;
+                //Just stop from penetrating
                 else if (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::STATIC){
-                    tc1.position += .8f * res.penetrationDist * res.normal;
+                    tc1.position += PERCENT * res.penetrationDist * res.normal;
 
                 }
+                //Just stop from penetrating
                 else if (pc1.type == PhysicsType::STATIC && pc2.type == PhysicsType::KINEMATIC){
-                    tc2.position -= .8f * res.penetrationDist * res.normal;
+                    tc2.position -= PERCENT * res.penetrationDist * res.normal;
                 }
+                //Actually Do Collision Resolution
                 else{
                     float invMass1 = pc1.type != PhysicsType::DYNAMIC ? 0 : pc1.invMass;
                     float invMass2 = pc2.type != PhysicsType::DYNAMIC ? 0 : pc2.invMass;
@@ -206,9 +282,7 @@ void CollisionSystem::update(float deltaTime){
                     glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity;
                     float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
                     if (velocityAlongNormal < 0){
-                        float percent = 0.8;
-                        float thresh = 0.01; 
-                        glm::vec3 correction = max(res.penetrationDist - thresh, 0.0f) / (invMass1 + invMass2) * percent * res.normal;
+                        glm::vec3 correction = max(res.penetrationDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
                         if (pc1.type != PhysicsType::STATIC){
                             tc1.position += invMass1 * correction;
                         }
@@ -223,9 +297,7 @@ void CollisionSystem::update(float deltaTime){
                     j /= invMass1 + invMass2;
                     glm::vec3 impulse = j * res.normal;
 
-                    float percent = 0.8;
-                    float thresh = 0.01; 
-                    glm::vec3 correction = max(res.penetrationDist - thresh, 0.0f) / (invMass1 + invMass2) * percent * res.normal;
+                    glm::vec3 correction = max(res.penetrationDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
                     
                     if (pc1.type != PhysicsType::STATIC){
                         pc1.velocity -= invMass1 * impulse;
@@ -276,6 +348,192 @@ void CollisionSystem::update(float deltaTime){
                 }
             }
         }
+    }
+}
+
+glm::vec3 CollisionSystem::computeContactPointEdges(glm::vec3 e1[2], glm::vec3 e2[2]){
+	glm::vec3 d1 = e1[1] - e1[0];
+	glm::vec3 d2 = e2[1] - e2[0];
+	glm::vec3 r = e1[0] - e2[0];
+	float a = glm::dot( d1, d1 );
+	float e = glm::dot( d2, d2 );
+	float f = glm::dot( d2, r );
+	float c = glm::dot( d1, r );
+
+	float b = glm::dot( d1, d2 );
+	float denom = a * e - b * b;
+
+	float TA = (b * f - c * e) / denom;
+	float TB = (b * TA + f) / e;
+
+    return ((e1[0] + d1 * TA) + (e2[0] + d2 * TB))*.5f;
+}
+
+int sign(float num){
+    if (num >= 0)
+        return 1;
+    else
+        return -1;
+}
+
+void CollisionSystem::getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoints[2], int axisEdge){
+    normal = glm::inverse(glm::mat3(orientation)) * normal;
+
+    if (axisEdge == 0){
+        glm::vec3 possiblePoints[] = {
+            {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z},
+            {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z},
+            {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z},
+            {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z}
+        };
+        float extremeEdge = -FLT_MAX;
+        int extremeVert = 5;
+        for (int x = 0; x < 4; x++){
+            float temp = glm::dot(possiblePoints[x], normal);
+            if (temp > extremeEdge){
+                extremeEdge = temp;
+                extremeVert = x;
+            }
+        }
+        outPoints[0] = possiblePoints[extremeVert];
+        outPoints[1] = possiblePoints[extremeVert];
+        outPoints[1].x *= -1;
+    }
+    else if (axisEdge == 1){
+        glm::vec3 possiblePoints[] = {
+            {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z},
+            {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z},
+            {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z},
+            {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z}
+        };
+        float extremeEdge = -FLT_MAX;
+        int extremeVert = 5;
+        for (int x = 0; x < 4; x++){
+            float temp = glm::dot(possiblePoints[x], normal);
+            if (temp > extremeEdge){
+                extremeEdge = temp;
+                extremeVert = x;
+            }
+        }
+        outPoints[0] = possiblePoints[extremeVert];
+        outPoints[1] = possiblePoints[extremeVert];
+        outPoints[1].y *= -1;
+    }
+    else{
+        glm::vec3 possiblePoints[] = {
+            {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z},
+            {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z},
+            {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z},
+            {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z}
+        };
+        float extremeEdge = -FLT_MAX;
+        int extremeVert = 5;
+        for (int x = 0; x < 4; x++){
+            float temp = glm::dot(possiblePoints[x], normal);
+            if (temp > extremeEdge){
+                extremeEdge = temp;
+                extremeVert = x;
+            }
+        }
+        outPoints[0] = possiblePoints[extremeVert];
+        outPoints[1] = possiblePoints[extremeVert];
+        outPoints[1].z *= -1;
+    }
+
+    outPoints[0] = orientation * glm::vec4(outPoints[0], 1);
+    outPoints[1] = orientation * glm::vec4(outPoints[1], 1);
+}
+
+glm::vec3 intersection(glm::vec3 start, glm::vec3 end, glm::vec3 point, glm::vec3 normal){
+    glm::vec3 direction = end - start;
+    float d = glm::dot(point - start, normal) / glm::dot(direction, normal);
+    return d * direction + start;
+}
+
+std::vector<contactPoint> CollisionSystem::clipVertices(glm::vec3 rFaceVertices[4], glm::vec3 rFaceNormal, glm::vec3 iFaceVertices[4], glm::vec3 iFaceNormal){
+    std::vector<glm::vec3> outList = std::vector<glm::vec3>(iFaceVertices, iFaceVertices + 4);
+    for (int x = 0; x < 4; x++){
+        glm::vec3 fStart = rFaceVertices[x];
+        glm::vec3 fEnd = rFaceVertices[(x+1) % 4];
+        glm::vec3 normal = glm::cross(fEnd - fStart, rFaceNormal);
+        
+        std::vector<glm::vec3> inList = outList;
+        outList.clear();
+        glm::vec3 S = inList.back();
+        for(int y = 0; y < inList.size(); y++){
+            glm::vec3 E = inList[y];
+            if (glm::dot(E - fStart, normal) <= 0){
+                if (glm::dot(S - fStart, normal) > 0){
+                    outList.push_back(intersection(S, E, fStart, normal));
+                }
+                outList.push_back(E);
+            }
+            else if (glm::dot(S - fStart, normal) <= 0){
+                outList.push_back(intersection(S, E, fStart, normal));
+            }
+            S = E;
+        }
+    }
+    std::vector<contactPoint> result;
+    for (int x = 0; x < outList.size(); x++){
+        glm::vec3 relativeVec = outList[x] - rFaceVertices[0];
+        float dist = glm::dot(relativeVec, rFaceNormal);
+        if (dist < 0){
+            contactPoint temp;
+            temp.penetrationDist = abs(dist);
+            temp.point = outList[x] - dist*rFaceNormal;
+            result.push_back(temp);
+        }
+    }
+    return result;
+}
+
+void CollisionSystem::getVerticesFromFaceNormal(glm::vec3 *outVertices, OBB obb, glm::mat4 orientation, int axis, bool opposite){
+    if (axis == 0){
+        if (!opposite){
+            outVertices[0] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[1] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[3] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+        }
+        else{
+            outVertices[0] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[1] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+        }
+
+    }
+    else if (axis == 1){
+        if (!opposite){
+            outVertices[0] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[1] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+        }
+        else{
+            outVertices[0] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[2] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+        }
+    }
+    else{
+        if (!opposite){
+            outVertices[0] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[2] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[3] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+        }
+        else{
+            outVertices[0] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[2] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z}; 
+        }
+    }
+    for (int x = 0; x < 4; x++){
+        outVertices[x] = orientation * glm::vec4(outVertices[x], 1);
     }
 }
 
