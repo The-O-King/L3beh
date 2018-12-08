@@ -4,6 +4,7 @@
 #include "core/system.h"
 #include "CustomComponents.hpp"
 #include "core/glm/glm.hpp"
+#include <vector>
 
 struct contactPoint{
     float penetrationDist;
@@ -12,7 +13,7 @@ struct contactPoint{
 
 struct collisionInfo{
     glm::vec3 normal;
-    float penetrationDist;
+    std::vector<contactPoint> points;
 };
 
 struct OBB{

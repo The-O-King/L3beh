@@ -11,8 +11,8 @@ MyWorld::MyWorld(){
     mSystems.push_back(new TransformSystem(this));
     mSystems.push_back(new RenderSystem(this));
     mSystems.push_back(new PlayerMovementSystem(this));
-    mSystems.push_back(new PhysicsSystem(this));
     mSystems.push_back(new CollisionSystem(this));
+    mSystems.push_back(new PhysicsSystem(this));
     mComponents.registerComponent<TransformComponent>();
     mComponents.registerComponent<RenderComponent>();
     mComponents.registerComponent<PlayerMovementComponent>();

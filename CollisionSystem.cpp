@@ -122,11 +122,10 @@ void CollisionSystem::update(float deltaTime){
 
                 if (collided){
                     if (minPenetrationEdge * .95 > minPenetrationFace + .01){
-                        std::cout << "Edge Collision" << std::endl;
+                        //Edge Collision
                         res.normal = edgePlanes[edgeMin];
                         if (glm::dot(tc2.worldPosition - tc1.worldPosition, res.normal) < 0)
                             res.normal *= -1;
-                        res.penetrationDist = abs(minPenetrationEdge);
                         
                         int axisEdge1 = edgeMin / 3;
                         int axisEdge2 = edgeMin % 3;
@@ -136,13 +135,13 @@ void CollisionSystem::update(float deltaTime){
                         getEdge(orientation2, obb2, -res.normal, edge2, axisEdge2);
                         contactPoint temp;
                         temp.point = computeContactPointEdges(edge1, edge2);
-                        temp.penetrationDist = res.penetrationDist;
+                        temp.penetrationDist = abs(minPenetrationEdge);
+                        res.points.push_back(temp);
                         res.normal *= -1;
                     }
                     else{
-                        std::cout << "Face Collision" << std::endl;
+                        //Face Collision
                         glm::vec3 referenceFaceNormal = facePlanes[faceMin];
-                        res.penetrationDist = abs(minPenetrationFace);
                         int referenceFaceOpposite = false;
                         if (glm::dot(tc2.worldPosition - tc1.worldPosition, referenceFaceNormal) < 0){
                             referenceFaceNormal *= -1;
@@ -174,13 +173,17 @@ void CollisionSystem::update(float deltaTime){
                             }
                             getVerticesFromFaceNormal(incidentFaceVertices, obb2, orientation2, axis, opposite);
                             getVerticesFromFaceNormal(referenceFaceVertices, obb1, orientation1, faceMin, referenceFaceOpposite);
+                            res.points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
+                            res.normal = referenceFaceNormal;
                         }
                         else{
+                            referenceFaceNormal *= -1;
+                            referenceFaceOpposite = !referenceFaceOpposite;
                             float min = FLT_MAX;
                             bool opposite = false;
                             int axis = 0;
                             for (int x = 0; x < 3; x++){
-                                float dotRes = glm::dot(facePlanes[x], res.normal);
+                                float dotRes = glm::dot(facePlanes[x], referenceFaceNormal);
                                 if (dotRes < min){
                                     min = dotRes;
                                     incidentFaceNormal = facePlanes[x];
@@ -196,11 +199,12 @@ void CollisionSystem::update(float deltaTime){
                             }
                             getVerticesFromFaceNormal(incidentFaceVertices, obb1, orientation1, axis, opposite);
                             getVerticesFromFaceNormal(referenceFaceVertices, obb2, orientation2, faceMin % 3, referenceFaceOpposite);                   
-                        }
-                        std::vector<contactPoint> points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
+                            res.points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
                         res.normal = referenceFaceNormal * -1.0f;
                     }
+                        res.normal *= -1.0f;
                 }
+            }
             }
             else if(cc1.sphereRadius != 0 && cc2.sphereRadius != 0){
                 float totalR = cc1.sphereRadius + cc2.sphereRadius;
@@ -208,7 +212,10 @@ void CollisionSystem::update(float deltaTime){
                 distBtwnObjects = distance - totalR;
                 collided = distance < totalR;
                 if (collided){
-                    res.penetrationDist = abs(distBtwnObjects);
+                    contactPoint temp;
+                    temp.point = (tc2.worldPosition + tc1.worldPosition) * .5f;
+                    temp.penetrationDist = abs(distBtwnObjects);
+                    res.points.push_back(temp);
                     res.normal = glm::normalize(tc1.worldPosition - tc2.worldPosition);
                 }
             }
@@ -239,8 +246,11 @@ void CollisionSystem::update(float deltaTime){
                 float distance = glm::distance(p, trueCenter);
                 if (distance < trueRadius){
                     collided = true;
+                    contactPoint temp;
+                    temp.point = p;
+                    temp.penetrationDist = abs(distance - trueRadius);
+                    res.points.push_back(temp);
                     res.normal = swap * glm::normalize(trueCenter - p);
-                    res.penetrationDist = abs(distance - trueRadius);
                 }
             }
 
@@ -267,45 +277,62 @@ void CollisionSystem::update(float deltaTime){
                     continue;
                 //Just stop from penetrating
                 else if (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::STATIC){
-                    tc1.position += PERCENT * res.penetrationDist * res.normal;
+                    float maxDist = -FLT_MAX;
+                    for (contactPoint cp: res.points){
+                        if (cp.penetrationDist > maxDist){
+                            maxDist = cp.penetrationDist;
+                        }
+                    }
+                    tc1.position += PERCENT * maxDist * res.normal;
 
                 }
                 //Just stop from penetrating
                 else if (pc1.type == PhysicsType::STATIC && pc2.type == PhysicsType::KINEMATIC){
-                    tc2.position -= PERCENT * res.penetrationDist * res.normal;
+                    float maxDist = -FLT_MAX;
+                    for (contactPoint cp: res.points){
+                        if (cp.penetrationDist > maxDist){
+                            maxDist = cp.penetrationDist;
+                        }
+                    }
+                    tc2.position -= PERCENT * maxDist * res.normal;
                 }
                 //Actually Do Collision Resolution
                 else{
+                    float maxDist = -FLT_MAX;
+                    for (contactPoint cp: res.points){
+                        if (cp.penetrationDist > maxDist){
+                            maxDist = cp.penetrationDist;
+                        }
+                    }
+
                     float invMass1 = pc1.type != PhysicsType::DYNAMIC ? 0 : pc1.invMass;
                     float invMass2 = pc2.type != PhysicsType::DYNAMIC ? 0 : pc2.invMass;
-                    
+                    //Positional Correection
                     glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity;
                     float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
-                    if (velocityAlongNormal < 0){
-                        glm::vec3 correction = max(res.penetrationDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
-                        if (pc1.type != PhysicsType::STATIC){
+                    glm::vec3 correction = max(maxDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
+                    if (pc1.type != PhysicsType::STATIC)
                             tc1.position += invMass1 * correction;
-                        }
-                        if (pc2.type != PhysicsType::STATIC){
+                    if (pc2.type != PhysicsType::STATIC)
                             tc2.position -= invMass2 * correction;
-                        }
-                        continue;                                              
-                    }
+
+
+                    float ratio = 1.0f/res.points.size();
+                    for (contactPoint cp : res.points){
+                        glm::vec3 r1 = cp.point - tc1.worldPosition;
+                        glm::vec3 r2 = cp.point - tc2.worldPosition;
                     float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
 
                     float j = -(1+e) * velocityAlongNormal;
                     j /= invMass1 + invMass2;
-                    glm::vec3 impulse = j * res.normal;
-
-                    glm::vec3 correction = max(res.penetrationDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
+                        glm::vec3 impulse = j * res.normal * ratio;
                     
                     if (pc1.type != PhysicsType::STATIC){
                         pc1.velocity -= invMass1 * impulse;
-                        tc1.position += invMass1 * correction;
                     }
                     if (pc2.type != PhysicsType::STATIC){
                         pc2.velocity += invMass2 * impulse;
-                        tc2.position -= invMass2 * correction;
+                        }
                     }
                 }
             }
