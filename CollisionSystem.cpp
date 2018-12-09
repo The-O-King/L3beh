@@ -38,14 +38,8 @@ void CollisionSystem::update(float deltaTime){
             float distBtwnObjects = FLT_MAX;
             collisionInfo res;
             if (cc1.boxMin != cc1.boxMax && cc2.boxMin != cc2.boxMax){
-                glm::mat4 orientation1 = glm::translate(glm::mat4(1.0), tc1.worldPosition);
-                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
-                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0)); 
-                glm::mat4 orientation2 = glm::translate(glm::mat4(1.0), tc2.worldPosition);
-                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
-                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-                orientation2 = glm::rotate(orientation2, (float)(glm::radians(tc2.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
+                glm::mat4 orientation1 = tc1.getOrientation();
+                glm::mat4 orientation2 = tc2.getOrientation();
                 OBB obb1, obb2;
                 obb1.AxisX = glm::vec3(orientation1[0]);
                 obb1.AxisY = glm::vec3(orientation1[1]);
@@ -237,10 +231,8 @@ void CollisionSystem::update(float deltaTime){
                     swap = -1;
                 }
 
-                glm::mat4 orientation1 = glm::rotate(glm::mat4(1), (float)(glm::radians(tc1.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
-                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-                orientation1 = glm::rotate(orientation1, (float)(glm::radians(tc1.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0)); 
-                trueCenter = glm::transpose(glm::mat3(orientation1)) * trueCenter;
+                glm::mat3 rotation1 = tc1.getRotation();
+                trueCenter = glm::transpose(rotation1) * trueCenter;
 
                 glm::vec3 p = glm::clamp(trueCenter, trueMin, trueMax);
                 float distance = glm::distance(p, trueCenter);
@@ -305,9 +297,29 @@ void CollisionSystem::update(float deltaTime){
                         }
                     }
 
-                    float invMass1 = pc1.type != PhysicsType::DYNAMIC ? 0 : pc1.invMass;
-                    float invMass2 = pc2.type != PhysicsType::DYNAMIC ? 0 : pc2.invMass;
-                    //Positional Correection
+                    float invMass1, invMass2;
+                    glm::mat3 invInertia1, invInertia2;
+                    if (pc1.type != PhysicsType::DYNAMIC){
+                        invMass1 = 0; 
+                        invInertia1 = glm::mat3(0);
+                    }
+                    else{
+                        invMass1 = pc1.invMass;
+                        invInertia1 = glm::mat3(6);
+                        glm::mat3 rotation1 = tc1.getRotation();
+                        invInertia1 = rotation1 * invInertia1 * glm::transpose(rotation1);
+                    }
+                    if (pc2.type != PhysicsType::DYNAMIC){
+                        invMass2 = 0; 
+                        invInertia2 = glm::mat3(0);
+                    }
+                    else{
+                        invMass2 = pc1.invMass;
+                        invInertia2 = glm::mat3(6);
+                        glm::mat3 rotation2 = tc2.getRotation();
+                        invInertia2 = rotation2 * invInertia2 * glm::transpose(rotation2);
+                    }
+                    //Positional Correction
                     glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity;
                     float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
                     glm::vec3 correction = max(maxDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
@@ -316,23 +328,42 @@ void CollisionSystem::update(float deltaTime){
                     if (pc2.type != PhysicsType::STATIC)
                             tc2.position -= invMass2 * correction;
 
-
-                    float ratio = 1.0f/res.points.size();
-                    for (contactPoint cp : res.points){
-                        glm::vec3 r1 = cp.point - tc1.worldPosition;
-                        glm::vec3 r2 = cp.point - tc2.worldPosition;
-                    float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
-
-                    float j = -(1+e) * velocityAlongNormal;
-                    j /= invMass1 + invMass2;
-                        glm::vec3 impulse = j * res.normal * ratio;
+                    if (velocityAlongNormal >= 0){
+                        float ratio = 1.0f/res.points.size();
+                        float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+                        float j = -(1+e) * velocityAlongNormal;
+                        j /= invMass1 + invMass2;
+                        glm::vec3 impulse = j * res.normal;
                     
-                    if (pc1.type != PhysicsType::STATIC){
-                        pc1.velocity -= invMass1 * impulse;
-                    }
-                    if (pc2.type != PhysicsType::STATIC){
-                        pc2.velocity += invMass2 * impulse;
+                        if (pc1.type != PhysicsType::STATIC){
+                            pc1.velocity -= invMass1 * impulse;
                         }
+                        if (pc2.type != PhysicsType::STATIC){
+                            pc2.velocity += invMass2 * impulse;
+                        }
+                        glm::vec3 totalAngular1(0, 0, 0);
+                        glm::vec3 totalAngular2(0, 0, 0);
+                        for (contactPoint cp : res.points){
+                            glm::vec3 r1 = cp.point - tc1.worldPosition;
+                            glm::vec3 r2 = cp.point - tc2.worldPosition;
+                            glm::vec3 crossPoint1 = invInertia1 * glm::cross(r1, res.normal);
+                            glm::vec3 crossPoint2 = invInertia2 * glm::cross(r2, res.normal);
+                            glm::vec3 relativeVelocityAngular = relativeVelocity + glm::cross(pc2.angularVelocity * .01745f, r2) - glm::cross(pc1.angularVelocity * .017453f, r1); 
+                            float j = -(1+e) * glm::dot(res.normal, relativeVelocityAngular);
+                            //Fudge factor for smoother simulation
+                            if (j < -.0001){
+                                j /= invMass1 + invMass2 + glm::dot(glm::cross(crossPoint1, r1) + glm::cross(crossPoint2, r2), res.normal);
+
+                                if (pc1.type != PhysicsType::STATIC){
+                                    totalAngular1 -= crossPoint1 * j;
+                                }
+                                if (pc2.type != PhysicsType::STATIC){
+                                    totalAngular2 += crossPoint2 * j;
+                                }
+                            }
+                        }
+                        pc1.angularVelocity += totalAngular1 * 57.29f;
+                        pc2.angularVelocity += totalAngular2 * 57.29f;
                     }
                 }
             }
@@ -505,7 +536,7 @@ std::vector<contactPoint> CollisionSystem::clipVertices(glm::vec3 rFaceVertices[
     for (int x = 0; x < outList.size(); x++){
         glm::vec3 relativeVec = outList[x] - rFaceVertices[0];
         float dist = glm::dot(relativeVec, rFaceNormal);
-        if (dist < 0){
+        if (dist < 0.01){
             contactPoint temp;
             temp.penetrationDist = abs(dist);
             temp.point = outList[x] - dist*rFaceNormal;

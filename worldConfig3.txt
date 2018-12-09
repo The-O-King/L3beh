@@ -19,17 +19,11 @@ PointLight 1 1 1 1
 Entity cube
 Transform 0    0 0 -5    0 0 0  1 1 1
 PlayerMovement 1
-Physics 2 1 1 0
+Physics 2 1 1 .5
 Collider 0     -.5 -.5 -.5    .5 .5 .5   0
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
-Entity cube
-Transform 0    0 2 -5    0 45 0  1 1 1
-Physics 2 1 1 0
-Collider 0     -.5 -.5 -.5    .5 .5 .5   0
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
-/Entity
 
 Entity Floor
 Physics 0 0 1 1

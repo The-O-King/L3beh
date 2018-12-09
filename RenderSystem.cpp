@@ -66,13 +66,8 @@ void RenderSystem::update(float deltaTime){
         CameraComponent cc = mWorld->getComponent<CameraComponent>(e);
         if (cc.isActive){
             TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
-            cameraPos = tc.worldPosition;
-            view = glm::translate(glm::mat4(1.0), tc.worldPosition);
-            view = glm::scale(view, tc.worldScale);
-            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
-            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-            view = glm::rotate(view, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));   
-            view = glm::inverse(view);
+            cameraPos = tc.worldPosition;  
+            view = glm::inverse(tc.getTransformation());
             projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 100.0f);
         }
     }
@@ -105,11 +100,7 @@ void RenderSystem::update(float deltaTime){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
         
-        glm::mat4 model = glm::translate(glm::mat4(1.0), tc.worldPosition);
-        model = glm::scale(model, tc.worldScale);
-        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.x)), glm::vec3(1.0, 0.0, 0.0));
-        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-        model = glm::rotate(model, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
+        glm::mat4 model = tc.getTransformation();
 
         glm::mat4 mvp = projection * view * model;
         glm::mat3 invT = glm::transpose(glm::inverse(model));

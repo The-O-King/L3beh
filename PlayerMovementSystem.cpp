@@ -80,6 +80,9 @@ void PlayerMovementSystem::update(float deltaTime){
                 PointLightComponent& pointLight = mWorld->getComponent<PointLightComponent>(child);
                 pointLight.color = {1, 1, 1};
             }
+            if (Input::getKeyDown(GLFW_KEY_EQUAL)){
+                int temp = 0;
+            }
             // if (Input::getKeyDown(GLFW_KEY_E)){
             //     phys.useGravity = !phys.useGravity;
             //     phys.isKinematic = !phys.useGravity; 

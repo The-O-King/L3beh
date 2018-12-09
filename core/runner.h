@@ -49,6 +49,7 @@ inline int run(World& gameWorld, std::string worldConfigFile)
         s->init();
     }
     /* Loop until the user closes the window */
+    float dt = 1.0/240;
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -60,8 +61,8 @@ inline int run(World& gameWorld, std::string worldConfigFile)
         std::cout << deltaTime << std::endl;
         
         for(System* s : gameWorld.getSystems()){
-            s->update(deltaTime);
-        }
+            s->update(dt);
+        }     
         glfwSwapBuffers(window);
         gameWorld.destroyEntities();
         Input::resetKeyState();
