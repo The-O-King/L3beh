@@ -45,15 +45,32 @@ struct PhysicsComponent{
 	glm::vec3 angularAcceleration = {0.0f, 0.0f, 0.0f};
 };
 
+enum ColliderType{
+	BOX = 0,
+	SPHERE = 1
+};
+
 struct ColliderComponent{
 	bool isTrigger;
-	glm::vec3 boxMin = {0.0f, 0.0f, 0.0f};
-	glm::vec3 boxMax = {0.0f, 0.0f, 0.0f};
-	float sphereRadius;
-
+	ColliderType type;
 	set<int> collisionEnter;
 	set<int> collisionStay;
 	set<int> collisionExit;
+};
+
+struct BoxColliderComponent : ColliderComponent {
+	BoxColliderComponent(){
+		type = ColliderType::BOX;
+	}
+	glm::vec3 boxMin = {0.0f, 0.0f, 0.0f};
+	glm::vec3 boxMax = {0.0f, 0.0f, 0.0f};
+};
+
+struct SphereColliderComponent : ColliderComponent {
+	SphereColliderComponent(){
+		type = ColliderType::SPHERE;
+	}
+	float radius;
 };
 
 struct CameraComponent{

@@ -18,6 +18,8 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<PlayerMovementComponent>();
     mComponents.registerComponent<PhysicsComponent>();
     mComponents.registerComponent<ColliderComponent>();
+    mComponents.registerComponent<BoxColliderComponent>();
+    mComponents.registerComponent<SphereColliderComponent>();
     mComponents.registerComponent<CameraComponent>();
     mComponents.registerComponent<PointLightComponent>();
 }
@@ -40,10 +42,17 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         pc.invMass = 1/pc.mass;
         addComponentToEntity<PhysicsComponent>(entityID, pc);
     }
-    else if (command == "Collider"){
-        ColliderComponent cc;
-        data >> cc.isTrigger >> cc.boxMin.x >> cc.boxMin.y >> cc.boxMin.z >> cc.boxMax.x >> cc.boxMax.y >> cc.boxMax.z >> cc.sphereRadius;
+    else if (command == "BoxCollider"){
+        BoxColliderComponent cc;
+        data >> cc.isTrigger >> cc.boxMin.x >> cc.boxMin.y >> cc.boxMin.z >> cc.boxMax.x >> cc.boxMax.y >> cc.boxMax.z;
+        addComponentToEntity<BoxColliderComponent>(entityID, cc);
         addComponentToEntity<ColliderComponent>(entityID, cc);
+    }
+    else if (command == "SphereCollider"){
+        SphereColliderComponent sc;
+        data >> sc.isTrigger >> sc.radius;
+        addComponentToEntity<SphereColliderComponent>(entityID, sc);
+        addComponentToEntity<ColliderComponent>(entityID, sc);
     }
     else if (command == "Camera"){
         CameraComponent cc;
