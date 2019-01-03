@@ -35,7 +35,7 @@ bool World::baseWorldGen(std::string worldConfigFile){
                     float parent, x, y, z, xx, yy, zz, xs, ys, zs;
                     currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
                     tc.position = glm::vec3(x, y, z);
-                    tc.rotation = glm::vec3(xx, yy, zz);
+                    tc.rotation = glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz));
                     tc.scale = glm::vec3(xs, ys, zs);
                     tc.parentEntity = parent;
                     TransformComponent& parentTransform = getComponent<TransformComponent>(parent);

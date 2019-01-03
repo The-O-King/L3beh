@@ -30,7 +30,7 @@ void TransformSystem::update(float deltaTime){
             currParent = curr.parentEntity;
         }
         curr.worldPosition = curr.position + parentTC.worldPosition;
-        curr.worldRotation = curr.rotation + parentTC.worldRotation;
+        curr.worldRotation = curr.rotation * parentTC.worldRotation;
         curr.worldScale = curr.scale + parentTC.worldScale;
     }
 }

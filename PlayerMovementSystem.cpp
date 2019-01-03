@@ -47,16 +47,16 @@ void PlayerMovementSystem::update(float deltaTime){
                 tc.position -= glm::vec3(0, 3, 0) * (float)deltaTime;
             }
             if (Input::getKey(GLFW_KEY_UP)){
-                tc.rotation += glm::vec3(30, 0, 0) * (float)deltaTime; 
+                tc.rotation *= glm::normalize(glm::quat(glm::vec3(glm::radians(30.0f)*(float)deltaTime, 0, 0))); 
             }
             if (Input::getKey(GLFW_KEY_DOWN)){
-                tc.rotation -= glm::vec3(30, 0, 0) * (float)deltaTime; 
+                tc.rotation *= glm::normalize(glm::quat(glm::vec3(glm::radians(-30.0f)*(float)deltaTime, 0, 0))); 
             }
             if (Input::getKey(GLFW_KEY_LEFT)){
-                tc.rotation -= glm::vec3(0, 30, 0) * (float)deltaTime; 
+                tc.rotation *= glm::normalize(glm::quat(glm::vec3(0, glm::radians(-30.0f)*(float)deltaTime, 0))); 
             }
             if (Input::getKey(GLFW_KEY_RIGHT)){
-                tc.rotation += glm::vec3(0, 30, 0) * (float)deltaTime; 
+                tc.rotation *= glm::normalize(glm::quat(glm::vec3(0, glm::radians(30.0f)*(float)deltaTime, 0))); 
             }
             if (Input::getKey(GLFW_KEY_1)){
                 int child = *tc.childEntities.begin();

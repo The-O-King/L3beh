@@ -124,52 +124,39 @@ void CollisionSystem::update(float deltaTime){
                         glm::mat3 rotation2 = tc2.getRotation();
                         invInertia2 = rotation2 * invInertia2 * glm::transpose(rotation2);
                     }
+
+                    glm::vec3 totalAngular1(0, 0, 0);
+                    glm::vec3 totalAngular2(0, 0, 0);
+                    for (contactPoint cp : res.points){
+                        glm::vec3 r1 = cp.point - tc1.worldPosition;
+                        glm::vec3 r2 = cp.point - tc2.worldPosition;
+                        glm::vec3 crossPoint1 = invInertia1 * glm::cross(r1, res.normal);
+                        glm::vec3 crossPoint2 = invInertia2 * glm::cross(r2, res.normal);
+                        glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, r2) - glm::cross(pc1.angularVelocity, r1);;
+                        float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
+                        if (velocityAlongNormal >= 0){
+                            float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+                            float j = -(1+e) * velocityAlongNormal;
+                            j /= invMass1 + invMass2 + glm::dot(glm::cross(crossPoint1, r1) + glm::cross(crossPoint2, r2), res.normal);
+                            if (pc1.type != PhysicsType::STATIC){
+                                pc1.velocity -= invMass1 * j * res.normal;
+                                totalAngular1 -= crossPoint1 * j;
+                            }
+                            if (pc2.type != PhysicsType::STATIC){
+                                pc2.velocity += invMass2 * j * res.normal;
+                                totalAngular2 += crossPoint2 * j;
+                            }
+                        }                      
+                    }
+                    pc1.angularVelocity += totalAngular1;
+                    pc2.angularVelocity += totalAngular2;
+                    
                     //Positional Correction
-                    glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity;
-                    float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
                     glm::vec3 correction = max(maxDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
                     if (pc1.type != PhysicsType::STATIC)
                             tc1.position += invMass1 * correction;
                     if (pc2.type != PhysicsType::STATIC)
                             tc2.position -= invMass2 * correction;
-
-                    if (velocityAlongNormal >= 0){
-                        float ratio = 1.0f/res.points.size();
-                        float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
-                        float j = -(1+e) * velocityAlongNormal;
-                        j /= invMass1 + invMass2;
-                        glm::vec3 impulse = j * res.normal;
-                    
-                        if (pc1.type != PhysicsType::STATIC){
-                            pc1.velocity -= invMass1 * impulse;
-                        }
-                        if (pc2.type != PhysicsType::STATIC){
-                            pc2.velocity += invMass2 * impulse;
-                        }
-                        glm::vec3 totalAngular1(0, 0, 0);
-                        glm::vec3 totalAngular2(0, 0, 0);
-                        for (contactPoint cp : res.points){
-                            glm::vec3 r1 = cp.point - tc1.worldPosition;
-                            glm::vec3 r2 = cp.point - tc2.worldPosition;
-                            glm::vec3 crossPoint1 = invInertia1 * glm::cross(r1, res.normal);
-                            glm::vec3 crossPoint2 = invInertia2 * glm::cross(r2, res.normal);
-                            glm::vec3 relativeVelocityAngular = relativeVelocity + glm::cross(pc2.angularVelocity * .01745f, r2) - glm::cross(pc1.angularVelocity * .017453f, r1); 
-                            float j = -(1+e) * glm::dot(res.normal, relativeVelocityAngular);
-                            //Fudge factor for smoother simulation
-                            if (j < -.0001){
-                                j /= invMass1 + invMass2 + glm::dot(glm::cross(crossPoint1, r1) + glm::cross(crossPoint2, r2), res.normal);
-
-                                if (pc1.type != PhysicsType::STATIC){
-                                    totalAngular1 -= crossPoint1 * j;
-                                }
-                                if (pc2.type != PhysicsType::STATIC){
-                                    totalAngular2 += crossPoint2 * j;
-                                }
-                            }
-                        }
-                        pc1.angularVelocity += totalAngular1 * 57.29f;
-                        pc2.angularVelocity += totalAngular2 * 57.29f;
-                    }
                 }
             }
             else{
@@ -341,7 +328,7 @@ std::vector<contactPoint> clipVertices(glm::vec3 rFaceVertices[4], glm::vec3 rFa
     for (int x = 0; x < outList.size(); x++){
         glm::vec3 relativeVec = outList[x] - rFaceVertices[0];
         float dist = glm::dot(relativeVec, rFaceNormal);
-        if (dist < 0.01){
+        if (dist < 0.00){
             contactPoint temp;
             temp.penetrationDist = abs(dist);
             temp.point = outList[x] - dist*rFaceNormal;
