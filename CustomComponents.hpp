@@ -39,6 +39,7 @@ struct PhysicsComponent{
 	float mass = 1;
 	float invMass = 1;
 	float restitutionCoefficient = 0;
+	float friction = 0;
 
     glm::vec3 sumTorques = {0.0f, 0.0f, 0.0f};
 	glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};

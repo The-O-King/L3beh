@@ -6,8 +6,9 @@
 #include <iostream>
 #include <vector>
 
-#define PERCENT .95f
+#define PERCENT .2f
 #define THRESH .01f
+#define EPSILON .0001
 
 collisionFunction collisionTestTable[2][2] = {
     {BoxVsBox, BoxVsSphere},
@@ -127,6 +128,10 @@ void CollisionSystem::update(float deltaTime){
 
                     glm::vec3 totalAngular1(0, 0, 0);
                     glm::vec3 totalAngular2(0, 0, 0);
+                    glm::vec3 totalLinear1(0, 0, 0);
+                    glm::vec3 totalLinear2(0, 0, 0);
+                    float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+                    float mu = (pc1.friction + pc2.friction) * .5;
                     for (contactPoint cp : res.points){
                         glm::vec3 r1 = cp.point - tc1.worldPosition;
                         glm::vec3 r2 = cp.point - tc2.worldPosition;
@@ -134,23 +139,26 @@ void CollisionSystem::update(float deltaTime){
                         glm::vec3 crossPoint2 = invInertia2 * glm::cross(r2, res.normal);
                         glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, r2) - glm::cross(pc1.angularVelocity, r1);;
                         float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
+                        glm::vec3 tangent = relativeVelocity - glm::dot(relativeVelocity, res.normal)*res.normal;
+                        tangent = glm::dot(tangent, tangent) < EPSILON * EPSILON ? glm::vec3(0, 0, 0) : glm::normalize(tangent);
                         if (velocityAlongNormal >= 0){
-                            float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
                             float j = -(1+e) * velocityAlongNormal;
                             j /= invMass1 + invMass2 + glm::dot(glm::cross(crossPoint1, r1) + glm::cross(crossPoint2, r2), res.normal);
                             if (pc1.type != PhysicsType::STATIC){
-                                pc1.velocity -= invMass1 * j * res.normal;
+                                totalLinear1 -= invMass1 * j * res.normal;
                                 totalAngular1 -= crossPoint1 * j;
                             }
                             if (pc2.type != PhysicsType::STATIC){
-                                pc2.velocity += invMass2 * j * res.normal;
+                                totalLinear2 += invMass2 * j * res.normal;
                                 totalAngular2 += crossPoint2 * j;
                             }
                         }                      
                     }
                     pc1.angularVelocity += totalAngular1;
                     pc2.angularVelocity += totalAngular2;
-                    
+                    pc1.velocity += totalLinear1;
+                    pc2.velocity += totalLinear2;
+
                     //Positional Correction
                     glm::vec3 correction = max(maxDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
                     if (pc1.type != PhysicsType::STATIC)
