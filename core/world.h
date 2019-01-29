@@ -26,6 +26,8 @@ class World{
         bool baseWorldGen(std::string worldConfigFile);
         virtual bool customWorldGen(int entityID, std::string command, std::istringstream& data);
         int createEntity();
+        int createEntity(std::string entityConfig);
+        int createEntity(std::istream& entityConfig);
         void destroyEntity(int entityID);
         void destroyEntities();
         std::vector<System*>& getSystems();

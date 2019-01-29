@@ -4,5 +4,5 @@
 
 int main(){
     MyWorld newWorld;
-    return run(newWorld, "worldConfig3.txt");
+    return run(newWorld, "worldConfig4.txt");
 }

@@ -8,6 +8,48 @@ std::vector<System*>& World::getSystems(){
     return mSystems;
 }
 
+int World::createEntity(std::istream& entityConfig){
+    int baby = -1;
+    std::string line;
+    std::string command;
+    getline(entityConfig, line);
+    std::istringstream currLine(line);
+    currLine >> command;
+    if (command == "Entity"){
+        baby = createEntity();
+        std::string tag;
+        currLine >> tag;
+        getline(entityConfig, line);
+        while (line != "/Entity"){
+            currLine.str(line);
+            currLine.seekg(0);
+            currLine >> command;
+            if (command == "Transform"){
+                TransformComponent tc;
+                float parent, x, y, z, xx, yy, zz, xs, ys, zs;
+                currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
+                tc.position = glm::vec3(x, y, z);
+                tc.rotation = glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz));
+                tc.scale = glm::vec3(xs, ys, zs);
+                tc.parentEntity = parent;
+                TransformComponent& parentTransform = getComponent<TransformComponent>(parent);
+                parentTransform.childEntities.insert(baby);
+                addComponentToEntity<TransformComponent>(baby, tc);
+            }
+            else{
+                customWorldGen(baby, command, currLine);
+            }
+            getline(entityConfig, line);
+        }
+    }
+    return baby;
+}
+
+int World::createEntity(std::string entityConfig){
+    std::istringstream f(entityConfig);
+    return createEntity(f);
+}
+
 bool World::baseWorldGen(std::string worldConfigFile){
     int worldRoot = createEntity();
     TransformComponent worldRootTC;
@@ -16,39 +58,8 @@ bool World::baseWorldGen(std::string worldConfigFile){
     std::ifstream inputFile;
     inputFile.open(worldConfigFile, std::ifstream::in);
 
-    std::string line;
-    std::string tag;
-    std::string command;
-    while(getline(inputFile, line)){
-        std::istringstream currLine(line);
-        currLine >> command;
-        if (command == "Entity"){
-            int baby = createEntity();
-            currLine >> tag;
-            getline(inputFile, line);
-            while (line != "/Entity"){
-                currLine.str(line);
-                currLine.seekg(0);
-                currLine >> command;
-                if (command == "Transform"){
-                    TransformComponent tc;
-                    float parent, x, y, z, xx, yy, zz, xs, ys, zs;
-                    currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
-                    tc.position = glm::vec3(x, y, z);
-                    tc.rotation = glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz));
-                    tc.scale = glm::vec3(xs, ys, zs);
-                    tc.parentEntity = parent;
-                    TransformComponent& parentTransform = getComponent<TransformComponent>(parent);
-                    parentTransform.childEntities.insert(baby);
-                    addComponentToEntity<TransformComponent>(baby, tc);
-                }
-                else{
-                    customWorldGen(baby, command, currLine);
-                }
-                getline(inputFile, line);
-            }
-        }
-        command = "";
+    while(!inputFile.eof()){
+        createEntity(inputFile);
     }
     return true;
 }

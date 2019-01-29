@@ -6,6 +6,14 @@
 #include "core/world.h"
 #include "core/input.h"
 
+std::string testEntity = 
+"Entity PhysicsBall\n"
+"Physics 2 1 1 1 .5\n"
+"Transform 0    0 0 -10    0 0 0  1 1 1\n"
+"SphereCollider 0 1\n"
+"Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
+"/Entity\n";
+
 PlayerMovementSystem::PlayerMovementSystem(World* w){
     mWorld = w;
     componentSignature main;
@@ -82,6 +90,16 @@ void PlayerMovementSystem::update(float deltaTime){
             }
             if (Input::getKeyDown(GLFW_KEY_EQUAL)){
                 int temp = 0;
+            }
+            if (Input::getKeyDown(GLFW_KEY_L)){
+                int baby = mWorld->createEntity(testEntity);
+                TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
+                temp2.position.z = tc.position.z - 2;
+                temp2.position.x = tc.position.x;
+                temp2.position.y = tc.position.y;
+                PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
+                temp.velocity.z = -20;
+                temp.gravityScale = .1;
             }
             // if (Input::getKeyDown(GLFW_KEY_E)){
             //     phys.useGravity = !phys.useGravity;
