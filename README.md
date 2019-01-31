@@ -38,12 +38,13 @@ A file that contains utilities used to create metadata and functions for compone
 
 **componentManager.h/.cpp**
 This code has all the logic that is used to manage component data. Before being used, component types need to be registered with the component manager (this is done using the world object though). Once registered, the component type gets an entry in a vector of vectors which stores the actual component instances (see the visualization below)
-|ComponentManager componentHolder| | | |
-|--|--|--|--
-|TransformComponent| data... | data...
-|BoxColliderComponent| data... |
-|PhysicsComponent| data... | data...|
-|PlayerMovementComponent| data... | data... | data... 
+
+| ComponentManager componentHolder |         |         |         |         |
+|----------------------------------|---------|---------|---------|---------|
+| TransformComponent               | data... | data... | data... | data... |
+| PhysicsComponent                 | data... | data... |         |         |
+| RenderComponent                  | data... |         |         |         |
+| BoxColliderComponent             | data... | data... | data... |         |
 
 The component instances themselves will as a result be stored linearly in memory, which should help a lot with caching! In order to access components for a specified entity, we keep another vector of dictionaries that map entityID -> index_in_componentHolder.
 
