@@ -32,9 +32,9 @@ This is the code that provides Input services for the programmer. It uses the GL
 **component_utils.h**
 A file that contains utilities used to create metadata and functions for components. This includes:
 
- - componentSignature: a typedef for the bitset used by systems to verify if an entity belongs to a system
- - invoker, make_invoker, and erase_at_index: Functions used to create type-erased function signatures for deletion functions needed to remove an entity and it's corresponding components from the game world. More info can be found here: https://stackoverflow.com/questions/52397451/call-a-vectors-function-given-the-vectors-pointer-as-a-void
- - generate_type_id() and type_id(): Functions that are used to make it easy for the programmer to get the ID of a registered component in the game engine. This uses templated functions with static variables that generate a new ID every time a new component type is registered and will always return that value when provided the same component type.
+ - **componentSignature**: a typedef for the bitset used by systems to verify if an entity belongs to a system
+ - **invoker, make_invoker, and erase_at_index**: Functions used to create type-erased function signatures for deletion functions needed to remove an entity and it's corresponding components from the game world. More info can be found here: https://stackoverflow.com/questions/52397451/call-a-vectors-function-given-the-vectors-pointer-as-a-void
+ - **generate_type_id()** and type_id(): Functions that are used to make it easy for the programmer to get the ID of a registered component in the game engine. This uses templated functions with static variables that generate a new ID every time a new component type is registered and will always return that value when provided the same component type.
 
 **componentManager.h/.cpp**
 This code has all the logic that is used to manage component data. Before being used, component types need to be registered with the component manager (this is done using the world object though). Once registered, the component type gets an entry in a vector of vectors which stores the actual component instances (see the visualization below)
@@ -49,3 +49,43 @@ This code has all the logic that is used to manage component data. Before being 
 The component instances themselves will as a result be stored linearly in memory, which should help a lot with caching! In order to access components for a specified entity, we keep another vector of dictionaries that map entityID -> index_in_componentHolder.
 
 Special care is taken when deleting entities (and deleting their specified component instances as a result) to update subsequent entities whose component instances have indexes larger than the one deleted; since everything is contiguous in memory a deletion will shift all subsequent components down, thus invalidating the handle we currently stored for entities that correspond to those component instances.
+
+A single world object has a single ComponentManager instance which is used to register/store the components of entities within that world. Functions that provide this functionality are: 
+
+ - **registerComponent()**: Gives a new component type a specific ID as well as creating a vector in the componentHolder to store component instances
+ - **addComponent()**: A templated function that allows the programmer to add a specified component type to a given entity. This function can be called by providing the entity ID and an already initialized instance of the component type you want to add, or it can be called without a component instance, and will instead will add a component instance with default parameters.
+ - **setComponent()**: Allows you to replace an already existing component that an entity has with a new instance of the component that you pass in.
+ - **removeComponent()**: Removes a component from an entity entirely and removes it from corresponding systems as well. 
+ - **destroyEntity()**: A function which removes an entity entirely from the world; deleting all of it's corresponding components and removing it from all systems. This will also remove the entity ID from the living_entities set in the world. The actual destruction of the entity occurs at the end of the frame this function is called in.
+ - **getComponent()**: A templated function that returns a reference to a specified component for an entity given it's entity ID. This allows the programmer to read or update that component's information
+
+**components.h**
+*TODO: Add more detail once core engine components are finalized*
+This file includes the definitions for all the component types that the core engine include. These component types are defined as structs of just data (the exception being the Transform component which will be explained below)
+
+**system.h**
+This code provides the interface that a programmer needs to implement in order to create new systems for the engine. By default, a System has these member variables:
+
+ - **mWorld**: Pointer to the World object that this system belongs to
+ - **neededComponentSignatures**: A vector of all the componentSignatures that could allow an entity to fall within this system's control
+ - **entities**: A set that is provided by default to store all the entity IDs that fall within this system
+
+These function prototypes are provided and need to be overridden:
+
+ - **init()**: Called just before the first frame of the game starts. Is a good place to do some initialization of values for entities
+ - **update()**: Called every frame of the game, this is where most game logic will sit. The deltaTime between the last frame and the current frame is also provided to allow for framerate independent logic to be implemented.
+
+Along with these functions, additional functions that can be overridden if needed include:
+
+ - **addEntity()**: Function which is called whenever a new entity fits the needed componentSignature of the system. By default, the function adds the entity to a set of all entities that fit within the system. Overriding this function can allow you to better organize components that fit within the system once they are added.
+ - **removeEntity()**: Function that is called when an entity needs to be removed from a system because it no longer has the required componentSignature. This will most likely need to be overridden if you overrode the default addEntity() function in order to remove the entityID from a custom organization of entities that you implemented.
+
+Lastly, one function provided by default that does not need to be changed:
+ - **getNeededComponents()**: Returns a vector of componentSignatures that this system can accept.
+
+When implementing a new System, the workflow looks something like this:
+
+ 1. Create a new class (for example "DeathFlowerSystem") that inherits from the System class
+ 2. Implement a constructor which takes in a World pointer as an argument; set the mWorld member variable of the system equal to that world and then define all the required componentSignatures that you need entities to have, adding them to the neededComponentSignatures vector
+ 3. Override the addEntity(), removeEntity() functions if you have a specific organization for systems in mind
+ 4. Implement the init() and update() functions with the necessary game logic you want entities in this system to exercise
