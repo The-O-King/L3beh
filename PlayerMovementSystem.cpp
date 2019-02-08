@@ -6,13 +6,21 @@
 #include "core/world.h"
 #include "core/input.h"
 
-std::string testEntity = 
-"Entity PhysicsBall\n"
-"Physics 2 1 1 1 .5\n"
-"Transform 0    0 0 -10    0 0 0  1 1 1\n"
-"SphereCollider 0 1\n"
-"Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
-"/Entity\n";
+std::string testEntity[] = { 
+    "Entity PhysicsBall\n"
+    "Physics 2 1 1 1 .5\n"
+    "Transform 0    0 0 -10    0 0 0  1 1 1\n"
+    "SphereCollider 0 1\n"
+    "Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "/Entity\n",
+    
+    "Entity PhysicsBall\n"
+    "Physics 2 1 1 1 .5\n"
+    "Transform 0    0 0 -10    0 0 0  1 1 1\n"
+    "BoxCollider 0  -.5 -.5 -.5 .5 .5 .5\n"
+    "Render cube.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "/Entity\n"
+};
 
 PlayerMovementSystem::PlayerMovementSystem(World* w){
     mWorld = w;
@@ -28,83 +36,44 @@ void PlayerMovementSystem::init(){
 
 void PlayerMovementSystem::update(float deltaTime){
     for (int e : entities){
-        PlayerMovementComponent pc = mWorld->getComponent<PlayerMovementComponent>(e);
+        PlayerMovementComponent& pc = mWorld->getComponent<PlayerMovementComponent>(e);
         if (pc.active){
             TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
+            glm::vec3 lookDir = glm::normalize(tc.worldRotation * glm::vec3(0, 0, -1));
+            glm::vec3 forward = glm::normalize((tc.worldRotation * glm::vec3(0, 0, -1)) * glm::vec3(1, 0, 1));  
+            glm::vec3 left = glm::normalize((tc.worldRotation * glm::vec3(-1, 0, 0)) * glm::vec3(1, 0, 1));  
 
-            if (Input::getKey(GLFW_KEY_W)){        
-                glm::mat4 dir = glm::rotate(glm::mat4(1.0), (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-                dir = glm::rotate(dir, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
-                tc.position += glm::vec3(dir * glm::vec4(0, 0, -1, 0) * 3.0f * deltaTime);
+            if (Input::getKey(GLFW_KEY_W)){      
+                tc.position += forward * 5.0f * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_S)){
-                glm::mat4 dir = glm::rotate(glm::mat4(1.0), (float)(glm::radians(tc.worldRotation.y)), glm::vec3(0.0, 1.0, 0.0));
-                dir = glm::rotate(dir, (float)(glm::radians(tc.worldRotation.z)), glm::vec3(0.0, 0.0, 1.0));
-                tc.position -= glm::vec3(dir * glm::vec4(0, 0, -1, 0) * 3.0f * deltaTime);
+                tc.position -= forward * 5.0f * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_A)){
-                tc.position -= glm::vec3(3, 0, 0) * (float)deltaTime;
+                tc.position += left * 5.0f * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_D)){
-                tc.position += glm::vec3(3, 0, 0) * (float)deltaTime;
+                tc.position -= left * 5.0f * deltaTime;
             }
-            if (Input::getKey(GLFW_KEY_Q)){
-                tc.position += glm::vec3(0, 3, 0) * (float)deltaTime;
-            }
-            if (Input::getKey(GLFW_KEY_E)){
-                tc.position -= glm::vec3(0, 3, 0) * (float)deltaTime;
-            }
-            if (Input::getKey(GLFW_KEY_UP)){
-                tc.rotation *= glm::normalize(glm::quat(glm::vec3(glm::radians(30.0f)*(float)deltaTime, 0, 0))); 
-            }
-            if (Input::getKey(GLFW_KEY_DOWN)){
-                tc.rotation *= glm::normalize(glm::quat(glm::vec3(glm::radians(-30.0f)*(float)deltaTime, 0, 0))); 
-            }
-            if (Input::getKey(GLFW_KEY_LEFT)){
-                tc.rotation *= glm::normalize(glm::quat(glm::vec3(0, glm::radians(-30.0f)*(float)deltaTime, 0))); 
-            }
-            if (Input::getKey(GLFW_KEY_RIGHT)){
-                tc.rotation *= glm::normalize(glm::quat(glm::vec3(0, glm::radians(30.0f)*(float)deltaTime, 0))); 
-            }
-            if (Input::getKey(GLFW_KEY_1)){
-                int child = *tc.childEntities.begin();
-                PointLightComponent& pointLight = mWorld->getComponent<PointLightComponent>(child);
-                pointLight.color = {1, 0, 0};
-            }
-            
-            if (Input::getKey(GLFW_KEY_2)){
-                int child = *tc.childEntities.begin();
-                PointLightComponent& pointLight = mWorld->getComponent<PointLightComponent>(child);
-                pointLight.color = {0, 1, 0};
-            }
-            
-            if (Input::getKey(GLFW_KEY_3)){
-                int child = *tc.childEntities.begin();
-                PointLightComponent& pointLight = mWorld->getComponent<PointLightComponent>(child);
-                pointLight.color = {0, 0, 1};
-            }
-            if (Input::getKey(GLFW_KEY_0)){
-                int child = *tc.childEntities.begin();
-                PointLightComponent& pointLight = mWorld->getComponent<PointLightComponent>(child);
-                pointLight.color = {1, 1, 1};
+
+            double xdelta, ydelta;
+            Input::getMouseDelta(&xdelta, &ydelta);
+            glm::quat yawRotation = glm::vec3(0, xdelta * deltaTime, 0);
+            glm::quat pitchRotation = glm::vec3(ydelta * deltaTime, 0, 0);
+            tc.rotation = yawRotation * tc.rotation * pitchRotation;
+
+            if (Input::getMouseButtonDown(GLFW_MOUSE_BUTTON_1)){
+                int baby = mWorld->createEntity(testEntity[0]);
+                TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
+                temp2.position = tc.worldPosition + (lookDir * 4.0f);
+                temp2.rotation = tc.worldRotation;
+                PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
+                temp.velocity = lookDir * 100.0f;
+                temp.gravityScale = .1;
             }
             if (Input::getKeyDown(GLFW_KEY_EQUAL)){
                 int temp = 0;
             }
-            if (Input::getKeyDown(GLFW_KEY_L)){
-                int baby = mWorld->createEntity(testEntity);
-                TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
-                temp2.position.z = tc.position.z - 2;
-                temp2.position.x = tc.position.x;
-                temp2.position.y = tc.position.y;
-                PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
-                temp.velocity.z = -20;
-                temp.gravityScale = .1;
-            }
-            // if (Input::getKeyDown(GLFW_KEY_E)){
-            //     phys.useGravity = !phys.useGravity;
-            //     phys.isKinematic = !phys.useGravity; 
-            // }
         }
     }
 }

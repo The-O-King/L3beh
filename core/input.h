@@ -13,6 +13,8 @@ namespace Input{
     bool getMouseButtonDown(int keycode);
     bool getMouseButtonUp(int keycode);
     void getMousePos(double* xpos, double* ypos);
+    void getMouseDelta(double* xpos, double* ypos);
+    double getScrollDelta();
     void resetKeyState();
 }
 

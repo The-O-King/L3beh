@@ -3,7 +3,7 @@ PlayerMovement 1
 Physics 1 0 1 1 .2
 SphereCollider 0 1
 Transform 0    0 0 -2   0 0 0  1 1 1
-Camera 1 90
+Camera 1 60
 /Entity
 
 Entity Light
