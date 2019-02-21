@@ -5,12 +5,14 @@
 #include "PhysicsSystem.h"
 #include "CollisionSystem.h"
 #include "RenderSystem.h"
+#include "ProjectileSystem.h"
 #include "MyWorld.h"
 
 MyWorld::MyWorld(){
     mSystems.push_back(new TransformSystem(this));
     mSystems.push_back(new RenderSystem(this));
     mSystems.push_back(new PlayerMovementSystem(this));
+    mSystems.push_back(new ProjectileSystem(this));
     mSystems.push_back(new CollisionSystem(this));
     mSystems.push_back(new PhysicsSystem(this));
     mComponents.registerComponent<TransformComponent>();
@@ -22,6 +24,7 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<SphereColliderComponent>();
     mComponents.registerComponent<CameraComponent>();
     mComponents.registerComponent<PointLightComponent>();
+    mComponents.registerComponent<ProjectileComponent>();
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
@@ -63,6 +66,10 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         PointLightComponent pc;
         data >> pc.intensity >> pc.color.r >> pc.color.g >> pc.color.b;
         addComponentToEntity<PointLightComponent>(entityID, pc);
+    }
+    else if (command == "Projectile"){
+        ProjectileComponent pc;
+        addComponentToEntity<ProjectileComponent>(entityID, pc);
     }
     return true;
 }

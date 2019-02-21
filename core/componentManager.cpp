@@ -1,5 +1,11 @@
 #include "componentManager.h"
 
+ComponentManager::ComponentManager(){
+    entityDict.resize(MAX_COMPONENT);
+    componentHolder.resize(MAX_COMPONENT);
+    componentEraser.resize(MAX_COMPONENT);
+}
+
 bool ComponentManager::destroyEntity(int entityID, componentSignature toDestroy){
     for (int x = 0; x < MAX_COMPONENT; x++){
         if (toDestroy[x]){

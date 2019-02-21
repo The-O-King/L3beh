@@ -12,6 +12,8 @@ class ComponentManager{
         std::vector<invoker<int>> componentEraser;
 
     public:
+        ComponentManager();
+        
         bool destroyEntity(int entityID, componentSignature toDestroy);
 
         template <class T>
@@ -97,10 +99,11 @@ T& ComponentManager::getComponent(int entityID){
 
 template <class T>
 int ComponentManager::registerComponent(){
-    componentEraser.push_back(erase_at_index<T>());
-    componentHolder.push_back(new std::vector<T>);
-    entityDict.push_back(std::unordered_map<int, int>());
-    return type_id<T>();
+    int compID = type_id<T>();
+    componentEraser[compID] = erase_at_index<T>();
+    componentHolder[compID] = new std::vector<T>;
+    entityDict[compID] = std::unordered_map<int, int>();
+    return compID;
 }
 
 #endif

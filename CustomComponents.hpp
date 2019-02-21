@@ -22,6 +22,9 @@ struct RenderComponent{
 
 struct PlayerMovementComponent{
 	bool active;
+	int currProjectile = 0;
+	float walkSpeed = 3.0;
+	float runSpeed = 6.0;
 };
 
 enum PhysicsType{
@@ -82,6 +85,10 @@ struct CameraComponent{
 struct PointLightComponent{
 	float intensity = 0.0f;
 	glm::vec3 color = {0.0f, 0.0f, 0.0f};
+};
+
+struct ProjectileComponent{
+	float damage = 0;
 };
 
 #endif

@@ -12,6 +12,7 @@ std::string testEntity[] = {
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "SphereCollider 0 1\n"
     "Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "Projectile 0\n"
     "/Entity\n",
     
     "Entity PhysicsBall\n"
@@ -19,6 +20,7 @@ std::string testEntity[] = {
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "BoxCollider 0  -.5 -.5 -.5 .5 .5 .5\n"
     "Render cube.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "Projectile 0\n"
     "/Entity\n"
 };
 
@@ -42,7 +44,13 @@ void PlayerMovementSystem::update(float deltaTime){
             glm::vec3 lookDir = glm::normalize(tc.worldRotation * glm::vec3(0, 0, -1));
             glm::vec3 forward = glm::normalize((tc.worldRotation * glm::vec3(0, 0, -1)) * glm::vec3(1, 0, 1));  
             glm::vec3 left = glm::normalize((tc.worldRotation * glm::vec3(-1, 0, 0)) * glm::vec3(1, 0, 1));  
-
+            float speed = 0;
+            if (Input::getKey(GLFW_KEY_LEFT_SHIFT)){
+                speed = pc.runSpeed;
+            }
+            else{
+                speed = pc.walkSpeed;
+            }
             if (Input::getKey(GLFW_KEY_W)){      
                 tc.position += forward * 5.0f * deltaTime;
             }
@@ -61,9 +69,10 @@ void PlayerMovementSystem::update(float deltaTime){
             glm::quat yawRotation = glm::vec3(0, xdelta * deltaTime, 0);
             glm::quat pitchRotation = glm::vec3(ydelta * deltaTime, 0, 0);
             tc.rotation = yawRotation * tc.rotation * pitchRotation;
+            pc.currProjectile = glm::clamp(pc.currProjectile + (int)Input::getScrollDelta(), 0, 1);            
 
             if (Input::getMouseButtonDown(GLFW_MOUSE_BUTTON_1)){
-                int baby = mWorld->createEntity(testEntity[0]);
+                int baby = mWorld->createEntity(testEntity[pc.currProjectile]);
                 TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
                 temp2.position = tc.worldPosition + (lookDir * 4.0f);
                 temp2.rotation = tc.worldRotation;
