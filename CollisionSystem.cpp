@@ -8,7 +8,6 @@
 
 #define PERCENT .2f
 #define THRESH .01f
-#define EPSILON .0001
 
 collisionFunction collisionTestTable[2][2] = {
     {BoxVsBox, BoxVsSphere},
@@ -49,10 +48,19 @@ void CollisionSystem::update(float deltaTime){
             if (pc1.type == PhysicsType::STATIC && pc2.type == PhysicsType::STATIC)
                 continue;
 
-            collisionInfo res;
-            bool collided = collisionTestTable[cc1.type][cc2.type](entity1ID, tc1, entity2ID, tc2, res, mWorld);
+            collisionInfo res(entity1ID, entity2ID);
+            collisionTestTable[cc1.type][cc2.type](entity1ID, tc1, entity2ID, tc2, res, mWorld);
+            collisionInfoKey key(res);
 
-            if (collided){  
+            if (res.numContacts > 0){
+                std::map<collisionInfoKey, collisionInfo>::iterator iter = persistentCollisionData.find(key);
+                if (iter == persistentCollisionData.end()){
+                    persistentCollisionData[key] = res;
+                }
+                else{
+                    iter->second.update(res);
+                }
+                
                 set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
                 set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
                 if (historyEnter != cc1.collisionEnter.end()){
@@ -71,103 +79,92 @@ void CollisionSystem::update(float deltaTime){
                     //std::cout << "Enter" << std::endl;
                 }
 
-                if (cc1.isTrigger || cc2.isTrigger || (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::KINEMATIC))
-                    continue;
-                //Just stop from penetrating
-                else if (pc1.type == PhysicsType::KINEMATIC && pc2.type == PhysicsType::STATIC){
-                    float maxDist = -FLT_MAX;
-                    for (contactPoint cp: res.points){
-                        if (cp.penetrationDist > maxDist){
-                            maxDist = cp.penetrationDist;
-                        }
-                    }
-                    tc1.position += PERCENT * maxDist * res.normal;
-
+                float invMass1, invMass2;
+                glm::mat3 invInertia1, invInertia2;
+                if (pc1.type != PhysicsType::DYNAMIC){
+                    invMass1 = 0; 
+                    invInertia1 = glm::mat3(0);
                 }
-                //Just stop from penetrating
-                else if (pc1.type == PhysicsType::STATIC && pc2.type == PhysicsType::KINEMATIC){
-                    float maxDist = -FLT_MAX;
-                    for (contactPoint cp: res.points){
-                        if (cp.penetrationDist > maxDist){
-                            maxDist = cp.penetrationDist;
-                        }
-                    }
-                    tc2.position -= PERCENT * maxDist * res.normal;
-                }
-                //Actually Do Collision Resolution
                 else{
-                    float maxDist = -FLT_MAX;
-                    for (contactPoint cp: res.points){
-                        if (cp.penetrationDist > maxDist){
-                            maxDist = cp.penetrationDist;
+                    invMass1 = pc1.invMass;
+                    invInertia1 = glm::mat3(6);
+                    glm::mat3 rotation1 = tc1.getRotation();
+                    invInertia1 = rotation1 * invInertia1 * glm::transpose(rotation1);
+                }
+                if (pc2.type != PhysicsType::DYNAMIC){
+                    invMass2 = 0; 
+                    invInertia2 = glm::mat3(0);
+                }
+                else{
+                    invMass2 = pc1.invMass;
+                    invInertia2 = glm::mat3(6);
+                    glm::mat3 rotation2 = tc2.getRotation();
+                    invInertia2 = rotation2 * invInertia2 * glm::transpose(rotation2);
+                }
+
+                // Pre Solving Computations
+                float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+                float mu = sqrt(pc1.friction * pc2.friction);
+                for (int w = 0; w < res.numContacts; w++){
+                    contactPoint cp = res.points[w];
+                    res.points[w].r1 = cp.point - tc1.worldPosition;
+                    res.points[w].r2 = cp.point - tc2.worldPosition;
+                    glm::vec3 crossPoint1 = glm::cross(res.points[w].r1, res.normal);
+                    glm::vec3 crossPoint2 = glm::cross(res.points[w].r2, res.normal);
+                    float kNormal = invMass1 + invMass2;
+                    kNormal += glm::dot(crossPoint1, invInertia1 * crossPoint1) + glm::dot(crossPoint2, invInertia2 * crossPoint2);
+                    res.points[w].massNormal = 1.0f / kNormal;
+                    res.points[w].bias = -PERCENT / deltaTime * max(0.0f, res.points[w].penetrationDist - THRESH);
+
+                    for (int z = 0; z < 2; z++){
+                        glm::vec3 crossPoint1T = glm::cross(res.points[w].r1, res.tangent[z]);
+                        glm::vec3 crossPoint2T = glm::cross(res.points[w].r2, res.tangent[z]);
+                        float kTangent = invMass1 + invMass2;
+                        kTangent += glm::dot(crossPoint1T, invInertia1 * crossPoint1T) + glm::dot(crossPoint2T, invInertia2 * crossPoint2T);
+                        res.points[w].massTangent[z] = 1.0f / kTangent;
+                    }
+                }
+
+                for (int q = 0; q < 4; q++){
+                    for (int w = 0; w < res.numContacts; w++){
+                        // Normal Impulse
+                        glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res.points[w].r2) - glm::cross(pc1.angularVelocity, res.points[w].r1);
+                        float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
+                        float j = (-velocityAlongNormal + res.points[w].bias) * res.points[w].massNormal;
+                        
+                        float temp = res.points[w].Pn;
+                        res.points[w].Pn = min(temp + j, 0.0f);
+                        j = res.points[w].Pn - temp;
+
+                        glm::vec3 P = j * res.normal;
+                        pc1.velocity -= invMass1 * P;
+                        pc1.angularVelocity -= invInertia1 * glm::cross(res.points[w].r1, P);
+                        pc2.velocity += invMass2 * P;
+                        pc2.angularVelocity += invInertia2 * glm::cross(res.points[w].r2, P);
+
+                        // Friction Impulse
+                        relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res.points[w].r2) - glm::cross(pc1.angularVelocity, res.points[w].r1);
+                        for (int z = 0; z < 2; z++){
+                            float velocityAlongTangent = glm::dot(relativeVelocity, res.tangent[z]); 
+                            float j = -velocityAlongTangent * res.points[w].massTangent[z];
+                            float maxJ = mu * res.points[w].Pn;
+
+                            float temp = res.points[w].Pt[z];
+                            res.points[w].Pt[z] = glm::clamp(temp + j, maxJ, -maxJ); // Negate the larger one because Pn is negative
+                            j = res.points[w].Pt[z] - temp;
+
+                            glm::vec3 P = j * res.tangent[z];
+                            pc1.velocity -= invMass1 * P;
+                            pc1.angularVelocity -= invInertia1 * glm::cross(res.points[w].r1, P);
+                            pc2.velocity += invMass2 * P;
+                            pc2.angularVelocity += invInertia2 * glm::cross(res.points[w].r2, P);
                         }
                     }
-
-                    float invMass1, invMass2;
-                    glm::mat3 invInertia1, invInertia2;
-                    if (pc1.type != PhysicsType::DYNAMIC){
-                        invMass1 = 0; 
-                        invInertia1 = glm::mat3(0);
-                    }
-                    else{
-                        invMass1 = pc1.invMass;
-                        invInertia1 = glm::mat3(6);
-                        glm::mat3 rotation1 = tc1.getRotation();
-                        invInertia1 = rotation1 * invInertia1 * glm::transpose(rotation1);
-                    }
-                    if (pc2.type != PhysicsType::DYNAMIC){
-                        invMass2 = 0; 
-                        invInertia2 = glm::mat3(0);
-                    }
-                    else{
-                        invMass2 = pc1.invMass;
-                        invInertia2 = glm::mat3(6);
-                        glm::mat3 rotation2 = tc2.getRotation();
-                        invInertia2 = rotation2 * invInertia2 * glm::transpose(rotation2);
-                    }
-
-                    glm::vec3 totalAngular1(0, 0, 0);
-                    glm::vec3 totalAngular2(0, 0, 0);
-                    glm::vec3 totalLinear1(0, 0, 0);
-                    glm::vec3 totalLinear2(0, 0, 0);
-                    float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
-                    float mu = (pc1.friction + pc2.friction) * .5;
-                    for (contactPoint cp : res.points){
-                        glm::vec3 r1 = cp.point - tc1.worldPosition;
-                        glm::vec3 r2 = cp.point - tc2.worldPosition;
-                        glm::vec3 crossPoint1 = invInertia1 * glm::cross(r1, res.normal);
-                        glm::vec3 crossPoint2 = invInertia2 * glm::cross(r2, res.normal);
-                        glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, r2) - glm::cross(pc1.angularVelocity, r1);;
-                        float velocityAlongNormal = glm::dot(relativeVelocity, res.normal);
-                        glm::vec3 tangent = relativeVelocity - glm::dot(relativeVelocity, res.normal)*res.normal;
-                        tangent = glm::dot(tangent, tangent) < EPSILON * EPSILON ? glm::vec3(0, 0, 0) : glm::normalize(tangent);
-                        if (velocityAlongNormal >= 0){
-                            float j = -(1+e) * velocityAlongNormal;
-                            j /= invMass1 + invMass2 + glm::dot(glm::cross(crossPoint1, r1) + glm::cross(crossPoint2, r2), res.normal);
-                            if (pc1.type != PhysicsType::STATIC){
-                                totalLinear1 -= invMass1 * j * res.normal;
-                                totalAngular1 -= crossPoint1 * j;
-                            }
-                            if (pc2.type != PhysicsType::STATIC){
-                                totalLinear2 += invMass2 * j * res.normal;
-                                totalAngular2 += crossPoint2 * j;
-                            }
-                        }                      
-                    }
-                    pc1.angularVelocity += totalAngular1;
-                    pc2.angularVelocity += totalAngular2;
-                    pc1.velocity += totalLinear1;
-                    pc2.velocity += totalLinear2;
-
-                    //Positional Correction
-                    glm::vec3 correction = max(maxDist - THRESH, 0.0f) / (invMass1 + invMass2) * PERCENT * res.normal;
-                    if (pc1.type != PhysicsType::STATIC)
-                            tc1.position += invMass1 * correction;
-                    if (pc2.type != PhysicsType::STATIC)
-                            tc2.position -= invMass2 * correction;
                 }
             }
             else{
+                persistentCollisionData.erase(key);
+
                 set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
                 set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
                 set<int>::iterator historyExit = cc1.collisionExit.find(entityList[y]);
@@ -209,6 +206,25 @@ void CollisionSystem::update(float deltaTime){
     }
 }
 
+// Computes the orthonormal basis vectors given a normal
+// Found at http://box2d.org/2014/02/computing-a-basis/
+void computeBasis(const glm::vec3& a, glm::vec3* b, glm::vec3* c){
+    if (abs(a.x) >= 0.57735027f){
+        b->x =  a.y;
+        b->y = -a.x;
+        b->z = 0.0f;
+    }
+    else{
+        b->x =  0.0f;
+        b->y = a.z;
+        b->z = -a.y;
+    }
+
+    *b = glm::normalize(*b);
+    *c = glm::cross(a, *b);
+}
+
+// Function retrieved from https://pastebin.com/UQd1W0kg
 glm::vec3 computeContactPointEdges(glm::vec3 e1[2], glm::vec3 e2[2]){
 	glm::vec3 d1 = e1[1] - e1[0];
 	glm::vec3 d2 = e2[1] - e2[0];
@@ -227,14 +243,9 @@ glm::vec3 computeContactPointEdges(glm::vec3 e1[2], glm::vec3 e2[2]){
     return ((e1[0] + d1 * TA) + (e2[0] + d2 * TB))*.5f;
 }
 
-int sign(float num){
-    if (num >= 0)
-        return 1;
-    else
-        return -1;
-}
-
-void getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoints[2], int axisEdge){
+// Computes the edge involved in a collision given an axis and collision normal by 
+// Brute forcing through the 4 possible edges to find the best support edge
+void getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoints[2], int axisEdge, int &e){
     normal = glm::inverse(glm::mat3(orientation)) * normal;
 
     if (axisEdge == 0){
@@ -256,6 +267,7 @@ void getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoin
         outPoints[0] = possiblePoints[extremeVert];
         outPoints[1] = possiblePoints[extremeVert];
         outPoints[1].x *= -1;
+        e = extremeVert;
     }
     else if (axisEdge == 1){
         glm::vec3 possiblePoints[] = {
@@ -276,6 +288,7 @@ void getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoin
         outPoints[0] = possiblePoints[extremeVert];
         outPoints[1] = possiblePoints[extremeVert];
         outPoints[1].y *= -1;
+        e = extremeVert;
     }
     else{
         glm::vec3 possiblePoints[] = {
@@ -296,105 +309,154 @@ void getEdge(glm::mat4 orientation, OBB obb, glm::vec3 normal, glm::vec3 outPoin
         outPoints[0] = possiblePoints[extremeVert];
         outPoints[1] = possiblePoints[extremeVert];
         outPoints[1].z *= -1;
+        e = extremeVert;
     }
 
     outPoints[0] = orientation * glm::vec4(outPoints[0], 1);
     outPoints[1] = orientation * glm::vec4(outPoints[1], 1);
+    e += axisEdge * 3;
 }
 
-glm::vec3 intersection(glm::vec3 start, glm::vec3 end, glm::vec3 point, glm::vec3 normal){
-    glm::vec3 direction = end - start;
-    float d = glm::dot(point - start, normal) / glm::dot(direction, normal);
-    return d * direction + start;
+// Line-Plane intersection with clip edge setting
+clipVertex intersection(clipVertex start, clipVertex end, clipVertex point, glm::vec3 normal, bool back){
+    glm::vec3 direction = end.v - start.v;
+    float d = glm::dot(point.v - start.v, normal) / glm::dot(direction, normal);
+    clipVertex res;
+    res.v = d * direction + start.v;
+    res.f.inI = point.f.inI;
+    res.f.outI = point.f.outI;
+    if (back){
+        res.f.outR = point.f.outI;
+        res.f.outI = 0;
+}
+    else{
+        res.f.inR = point.f.outI;
+        res.f.inI = 0;
+    }
+    return res;
 }
 
-std::vector<contactPoint> clipVertices(glm::vec3 rFaceVertices[4], glm::vec3 rFaceNormal, glm::vec3 iFaceVertices[4], glm::vec3 iFaceNormal){
-    std::vector<glm::vec3> outList = std::vector<glm::vec3>(iFaceVertices, iFaceVertices + 4);
+// Sutherland-Hodgeman Clipping
+void clipVertices(clipVertex rFaceVertices[4], glm::vec3 rFaceNormal, clipVertex iFaceVertices[4], glm::vec3 iFaceNormal, contactPoint* out, int& outCount){
+    std::vector<clipVertex> outList = std::vector<clipVertex>(iFaceVertices, iFaceVertices + 4);
     for (int x = 0; x < 4; x++){
-        glm::vec3 fStart = rFaceVertices[x];
-        glm::vec3 fEnd = rFaceVertices[(x+1) % 4];
-        glm::vec3 normal = glm::cross(fEnd - fStart, rFaceNormal);
+        clipVertex fStart = rFaceVertices[x];
+        clipVertex fEnd = rFaceVertices[(x+1) % 4];
+        glm::vec3 normal = glm::cross(fEnd.v - fStart.v, rFaceNormal);
         
-        std::vector<glm::vec3> inList = outList;
+        std::vector<clipVertex> inList = outList;
         outList.clear();
-        glm::vec3 S = inList.back();
+        clipVertex S = inList.back();
         for(int y = 0; y < inList.size(); y++){
-            glm::vec3 E = inList[y];
-            if (glm::dot(E - fStart, normal) <= 0){
-                if (glm::dot(S - fStart, normal) > 0){
-                    outList.push_back(intersection(S, E, fStart, normal));
+            clipVertex E = inList[y];
+            if (glm::dot(E.v - fStart.v, normal) <= 0){
+                if (glm::dot(S.v - fStart.v, normal) > 0){
+                    outList.push_back(intersection(S, E, fStart, normal, false));
                 }
                 outList.push_back(E);
             }
-            else if (glm::dot(S - fStart, normal) <= 0){
-                outList.push_back(intersection(S, E, fStart, normal));
+            else if (glm::dot(S.v - fStart.v, normal) <= 0){
+                outList.push_back(intersection(S, E, fStart, normal, true));
             }
             S = E;
         }
     }
-    std::vector<contactPoint> result;
+    int numContact = 0;
     for (int x = 0; x < outList.size(); x++){
-        glm::vec3 relativeVec = outList[x] - rFaceVertices[0];
+        glm::vec3 relativeVec = outList[x].v - rFaceVertices[0].v;
         float dist = glm::dot(relativeVec, rFaceNormal);
         if (dist < 0.00){
-            contactPoint temp;
-            temp.penetrationDist = abs(dist);
-            temp.point = outList[x] - dist*rFaceNormal;
-            result.push_back(temp);
+            out[numContact].contactID = outList[x].f;
+            out[numContact].contactID.key = 1;
+            out[numContact].penetrationDist = abs(dist);
+            out[numContact].point = outList[x].v - dist*rFaceNormal;
+            numContact++;
         }
     }
-    return result;
+    outCount = numContact;
 }
 
-void getVerticesFromFaceNormal(glm::vec3 *outVertices, OBB obb, glm::mat4 orientation, int axis, bool opposite){
+// Inspired by q3ComputeIncidentFace found at https://github.com/RandyGaul/qu3e/blob/master/src/collision/q3Collide.cpp
+void getVerticesFromFaceNormal(clipVertex *outVertices, OBB obb, glm::mat4 orientation, int axis, bool opposite){
     if (axis == 0){
         if (!opposite){
-            outVertices[0] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
-            outVertices[1] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
-            outVertices[2] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[3] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[0].v = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[1].v = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2].v = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[3].v = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+
+            outVertices[0].f.inI = 9; outVertices[0].f.outI = 1;
+            outVertices[1].f.inI = 1; outVertices[1].f.outI = 8;
+            outVertices[2].f.inI = 8; outVertices[2].f.outI = 7;
+            outVertices[3].f.inI = 7; outVertices[3].f.outI = 9;
         }
         else{
-            outVertices[0] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[1] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
-            outVertices[2] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
-            outVertices[3] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[0].v = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[1].v = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2].v = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3].v = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            
+            outVertices[0].f.inI = 5;  outVertices[0].f.outI = 11;
+            outVertices[1].f.inI = 11; outVertices[1].f.outI = 3;
+            outVertices[2].f.inI = 3;  outVertices[2].f.outI = 10;
+            outVertices[3].f.inI = 10; outVertices[3].f.outI = 5;
         }
 
     }
     else if (axis == 1){
         if (!opposite){
-            outVertices[0] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
-            outVertices[1] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
-            outVertices[2] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
-            outVertices[3] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[0].v = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[1].v = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[2].v = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3].v = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+
+            outVertices[0].f.inI = 3; outVertices[0].f.outI = 0;
+            outVertices[1].f.inI = 0; outVertices[1].f.outI = 1;
+            outVertices[2].f.inI = 1; outVertices[2].f.outI = 2;
+            outVertices[3].f.inI = 2; outVertices[3].f.outI = 3;
         }
         else{
-            outVertices[0] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[2] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
-            outVertices[3] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[0].v = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[1].v = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[2].v = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3].v = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            
+            outVertices[0].f.inI = 7; outVertices[0].f.outI = 4;
+            outVertices[1].f.inI = 4; outVertices[1].f.outI = 5;
+            outVertices[2].f.inI = 5; outVertices[2].f.outI = 6;
+            outVertices[3].f.inI = 6; outVertices[3].f.outI = 7;
         }
     }
     else{
         if (!opposite){
-            outVertices[0] = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
-            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[2] = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
-            outVertices[3] = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[0].v = {-obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            outVertices[1].v = {-obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[2].v = {obb.Half_size.x, -obb.Half_size.y, obb.Half_size.z};
+            outVertices[3].v = {obb.Half_size.x, obb.Half_size.y, obb.Half_size.z};
+            
+            outVertices[0].f.inI = 0;  outVertices[0].f.outI = 11;
+            outVertices[1].f.inI = 11; outVertices[1].f.outI = 4;
+            outVertices[2].f.inI = 4;  outVertices[2].f.outI = 8;
+            outVertices[3].f.inI = 8;  outVertices[3].f.outI = 0;
         }
         else{
-            outVertices[0] = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
-            outVertices[1] = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
-            outVertices[2] = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
-            outVertices[3] = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z}; 
+            outVertices[0].v = {obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[1].v = {-obb.Half_size.x, -obb.Half_size.y, -obb.Half_size.z};
+            outVertices[2].v = {-obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z};
+            outVertices[3].v = {obb.Half_size.x, obb.Half_size.y, -obb.Half_size.z}; 
+            
+            outVertices[0].f.inI = 9;  outVertices[0].f.outI = 6;
+            outVertices[1].f.inI = 6;  outVertices[1].f.outI = 10;
+            outVertices[2].f.inI = 10; outVertices[2].f.outI = 2;
+            outVertices[3].f.inI = 2;  outVertices[3].f.outI = 9;
         }
     }
     for (int x = 0; x < 4; x++){
-        outVertices[x] = orientation * glm::vec4(outVertices[x], 1);
+        outVertices[x].v = orientation * glm::vec4(outVertices[x].v, 1);
     }
 }
 
+// https://stackoverflow.com/a/52010428/10383230
 float separatingDistance(const glm::vec3& RPos, const glm::vec3& Plane, const OBB& obb1, const OBB&obb2){
     return (fabs(glm::dot(RPos,Plane))) -
            (fabs(glm::dot((obb1.AxisX*obb1.Half_size.x),Plane)) +
@@ -405,7 +467,8 @@ float separatingDistance(const glm::vec3& RPos, const glm::vec3& Plane, const OB
             fabs(glm::dot((obb2.AxisZ*obb2.Half_size.z),Plane)));
 }
 
-bool BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
+// Main Box vs Box collision detection function
+void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent cc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     BoxColliderComponent cc2 = mWorld->getComponent<BoxColliderComponent>(c2);
     glm::mat4 orientation1 = tc1.getOrientation();
@@ -492,13 +555,14 @@ bool BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
             int axisEdge2 = edgeMin % 3;
             glm::vec3 edge1[2];
             glm::vec3 edge2[2];
-            getEdge(orientation1, obb1, res.normal, edge1, axisEdge1);
-            getEdge(orientation2, obb2, -res.normal, edge2, axisEdge2);
-            contactPoint temp;
-            temp.point = computeContactPointEdges(edge1, edge2);
-            temp.penetrationDist = abs(minPenetrationEdge);
-            res.points.push_back(temp);
+            getEdge(orientation1, obb1, res.normal, edge1, axisEdge1, res.points[0].contactID.inI);
+            getEdge(orientation2, obb2, -res.normal, edge2, axisEdge2, res.points[0].contactID.inR);
+            res.numContacts = 1;
+            res.points[0].point = computeContactPointEdges(edge1, edge2);
+            res.points[0].penetrationDist = abs(minPenetrationEdge);
+            res.points[0].contactID.key = 2;
             res.normal *= -1;
+            computeBasis(res.normal, res.tangent, res.tangent + 1);
         }
         else{
             //Face Collision
@@ -510,8 +574,8 @@ bool BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
             }
 
             glm::vec3 incidentFaceNormal;
-            glm::vec3 incidentFaceVertices[4];
-            glm::vec3 referenceFaceVertices[4];
+            clipVertex incidentFaceVertices[4];
+            clipVertex referenceFaceVertices[4];
 
             if (faceMin < 3){
                 float min = FLT_MAX;
@@ -534,7 +598,7 @@ bool BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
                 }
                 getVerticesFromFaceNormal(incidentFaceVertices, obb2, orientation2, axis, opposite);
                 getVerticesFromFaceNormal(referenceFaceVertices, obb1, orientation1, faceMin, referenceFaceOpposite);
-                res.points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
+                clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal, res.points, res.numContacts);
                 res.normal = referenceFaceNormal;
             }
             else{
@@ -560,40 +624,34 @@ bool BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
                 }
                 getVerticesFromFaceNormal(incidentFaceVertices, obb1, orientation1, axis, opposite);
                 getVerticesFromFaceNormal(referenceFaceVertices, obb2, orientation2, faceMin % 3, referenceFaceOpposite);
-                res.points = clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal);
+                clipVertices(referenceFaceVertices, referenceFaceNormal, incidentFaceVertices, incidentFaceNormal, res.points, res.numContacts);
                 res.normal = referenceFaceNormal * -1.0f;
             }
             res.normal *= -1.0f;
+            computeBasis(res.normal, res.tangent, res.tangent + 1);
         }
-        return true;
-    }
-    else{
-        return false;
     }
 }
 
-bool SphereVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
-    SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);;
-    SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);;
+void SphereVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
+    SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);
+    SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);
     float totalR = cc1.radius + cc2.radius;
     float distance = glm::distance(tc1.worldPosition, tc2.worldPosition);
     float distBtwnObjects = distance - totalR;
     bool collided = distance < totalR;
     res.distBetweenObjects = distBtwnObjects;
     if (collided){
-        contactPoint temp;
-        temp.point = (tc2.worldPosition + tc1.worldPosition) * .5f;
-        temp.penetrationDist = abs(distBtwnObjects);
-        res.points.push_back(temp);
+        res.numContacts = 1;
+        res.points[0].point = (tc2.worldPosition + tc1.worldPosition) * .5f;
+        res.points[0].penetrationDist = abs(distBtwnObjects);
+        res.points[0].contactID.key = 0;
         res.normal = glm::normalize(tc1.worldPosition - tc2.worldPosition);
-        return true;
-    }
-    else{
-        return false;
+        computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }
 
-bool SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
+void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     BoxColliderComponent cc2 = mWorld->getComponent<BoxColliderComponent>(c2);
     glm::vec3 trueCenter = tc1.worldPosition;
@@ -606,19 +664,16 @@ bool SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
     float distance = glm::distance(p, trueCenter);
     res.distBetweenObjects = distance - trueRadius;
     if (distance < trueRadius){
-        contactPoint temp;
-        temp.point = boxOrientation * glm::vec4(p, 1);
-        temp.penetrationDist = abs(distance - trueRadius);
-        res.points.push_back(temp);
+        res.numContacts = 1;
+        res.points[0].point = boxOrientation * glm::vec4(p, 1);
+        res.points[0].penetrationDist = abs(distance - trueRadius);
+        res.points[0].contactID.key = 0;
         res.normal = boxOrientation * glm::vec4(glm::normalize(trueCenter - p), 0);
-        return true;
-    }
-    else{
-        return false;
+        computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }
 
-bool BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
+void BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent cc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);
     glm::vec3 trueCenter = tc2.worldPosition;
@@ -631,14 +686,11 @@ bool BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
     float distance = glm::distance(p, trueCenter);
     res.distBetweenObjects = distance - trueRadius;
     if (distance < trueRadius){
-        contactPoint temp;
-        temp.point = boxOrientation * glm::vec4(p, 1);
-        temp.penetrationDist = abs(distance - trueRadius);
-        res.points.push_back(temp);
+        res.numContacts = 1;
+        res.points[0].point = boxOrientation * glm::vec4(p, 1);
+        res.points[0].penetrationDist = abs(distance - trueRadius);
+        res.points[0].contactID.key = 0;
         res.normal = -(boxOrientation * glm::vec4(glm::normalize(trueCenter - p), 0));
-        return true;
-    }
-    else{
-        return false;
+        computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }
