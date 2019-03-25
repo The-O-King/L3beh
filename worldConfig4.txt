@@ -1,7 +1,7 @@
 Entity Player
 PlayerMovement 1
 Physics 1 0 1 1 .2
-SphereCollider 0 1
+SphereCollider 0    0 0 0   1
 Transform 0    0 0 -2   0 0 0  1 1 1
 Camera 1 60
 /Entity
@@ -18,35 +18,35 @@ PointLight 4 1 0 0
 
 Entity Floor
 Physics 0 0 1 1 .2
-BoxCollider 0    -5 -.5 -5   5 .5 5
+BoxCollider 0    0 0 0   5 .5 5
 Transform 0    0 -5 -10   0 0 0  10 1 10
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity Ceiling
 Physics 0 0 1 1 .2
-BoxCollider 0    -5 -.5 -5   5 .5 5
+BoxCollider 0    0 0 0   5 .5 5
 Transform 0    0 5 -10   0 0 0  10 1 10
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallLeft
-Physics 0 0 1 1 .2
-BoxCollider 0     -.5 -5 -5   .5 5 5
+Physics 0 0 0 1 .2
+BoxCollider 0     0 0 0   .5 5 5
 Transform 0    -5 -1 -10   0 0 0  1 10 10
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallRight
-Physics 0 0 1 1 .2
-BoxCollider 0     -.5 -5 -5   .5 5 5
+Physics 0 0 0 1 .2
+BoxCollider 0     0 0 0   .5 5 5
 Transform 0    5 -1 -10   0 0 0  1 10 10
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallBack
-Physics 0 0 1 1 .2
-BoxCollider 0     -5 -5 -.5   5 5 .5
+Physics 0 0 0 1 .2
+BoxCollider 0     0 0 0   5 5 .5
 Transform 0    0 -1 -15   0 0 0  10 10 1
 Render cube.obj cube.jpg 1 1 1 1 1 1 2
 /Entity

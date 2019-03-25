@@ -3,6 +3,7 @@
 
 #include <string>
 #include "core/glm/vec3.hpp"
+#include "core/glm/mat3x3.hpp"
 using namespace std;
 
 struct RenderComponent{
@@ -41,6 +42,7 @@ struct PhysicsComponent{
 	glm::vec3 acceleration = {0.0f, 0.0f, 0.0f};
 	float mass = 1;
 	float invMass = 1;
+	glm::mat3 invInertia = glm::mat3(1);
 	float restitutionCoefficient = 0;
 	float friction = 0;
 
@@ -57,6 +59,7 @@ enum ColliderType{
 struct ColliderComponent{
 	bool isTrigger;
 	ColliderType type;
+	glm::vec3 offset = {0.0f, 0.0f, 0.0f};
 	set<int> collisionEnter;
 	set<int> collisionStay;
 	set<int> collisionExit;
@@ -66,8 +69,7 @@ struct BoxColliderComponent : ColliderComponent {
 	BoxColliderComponent(){
 		type = ColliderType::BOX;
 	}
-	glm::vec3 boxMin = {0.0f, 0.0f, 0.0f};
-	glm::vec3 boxMax = {0.0f, 0.0f, 0.0f};
+	glm::vec3 halfSize = {0.0f, 0.0f, 0.0f};
 };
 
 struct SphereColliderComponent : ColliderComponent {

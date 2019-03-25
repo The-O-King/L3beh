@@ -63,9 +63,12 @@ struct collisionInfo{
         }
     }
 
-    void update(collisionInfo &other){
-        this->distBetweenObjects = other.distBetweenObjects;
-        this->normal = other.normal;
+    collisionInfo* update(collisionInfo &other){
+        distBetweenObjects = other.distBetweenObjects;
+        normal = other.normal;
+        tangent[0] = other.tangent[0];
+        tangent[1] = other.tangent[1];
+        numContacts = other.numContacts;
 
         contactPoint merged[8];
         for (int x = 0; x < other.numContacts; x++){
@@ -83,6 +86,7 @@ struct collisionInfo{
                 contactPoint* c = merged + x;
                 contactPoint* cOld = points + equal;
                 *c = *newContact;
+                // Warm Starting
                 c->Pn = cOld->Pn;
                 c->Pt[0] = cOld->Pt[0];
                 c->Pt[1] = cOld->Pt[1];
@@ -91,6 +95,10 @@ struct collisionInfo{
                 merged[x] = other.points[x];
             }
         }
+        for (int x = 0; x < numContacts; x++){
+            points[x] = merged[x];
+        }
+        return this;
     }
 };
 
@@ -395,13 +403,13 @@ void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
     obb1.AxisX = glm::vec3(orientation1[0]);
     obb1.AxisY = glm::vec3(orientation1[1]);
     obb1.AxisZ = glm::vec3(orientation1[2]);
-    obb1.Half_size = (cc1.boxMax - cc1.boxMin) * .5f;
+    obb1.Half_size = cc1.halfSize;
     obb2.AxisX = glm::vec3(orientation2[0]);
     obb2.AxisY = glm::vec3(orientation2[1]);
     obb2.AxisZ = glm::vec3(orientation2[2]);
-    obb2.Half_size = (cc2.boxMax - cc2.boxMin) * .5f;
+    obb2.Half_size = cc2.halfSize;
 
-    glm::vec3 RPos = tc2.worldPosition - tc1.worldPosition;
+    glm::vec3 RPos = (tc2.worldPosition + cc2.offset) - (tc1.worldPosition + cc1.offset);
     glm::vec3 facePlanes[6] = { obb1.AxisX, obb1.AxisY, obb1.AxisZ, obb2.AxisX, obb2.AxisY, obb2.AxisZ };
     glm::vec3 edgePlanes[9] = { 
         glm::normalize(glm::cross(obb1.AxisX,obb2.AxisX)), 
@@ -466,7 +474,7 @@ void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
         if (minPenetrationEdge * .95 > minPenetrationFace + .01){
             //Edge Collision
             res.normal = edgePlanes[edgeMin];
-            if (glm::dot(tc2.worldPosition - tc1.worldPosition, res.normal) < 0)
+            if (glm::dot(RPos, res.normal) < 0)
                 res.normal *= -1;
             
             int axisEdge1 = edgeMin / 3;
@@ -486,7 +494,7 @@ void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
             //Face Collision
             glm::vec3 referenceFaceNormal = facePlanes[faceMin];
             int referenceFaceOpposite = false;
-            if (glm::dot(tc2.worldPosition - tc1.worldPosition, referenceFaceNormal) < 0){
+            if (glm::dot(RPos, referenceFaceNormal) < 0){
                 referenceFaceNormal *= -1;
                 referenceFaceOpposite = true;
             }
@@ -554,17 +562,19 @@ void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, 
 void SphereVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);
+    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;
+    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;
     float totalR = cc1.radius + cc2.radius;
-    float distance = glm::distance(tc1.worldPosition, tc2.worldPosition);
+    float distance = glm::distance(trueCenter1, trueCenter2);
     float distBtwnObjects = distance - totalR;
     bool collided = distance < totalR;
     res.distBetweenObjects = distBtwnObjects;
     if (collided){
         res.numContacts = 1;
-        res.points[0].point = (tc2.worldPosition + tc1.worldPosition) * .5f;
+        res.points[0].point = (trueCenter1 + trueCenter2) * .5f;
         res.points[0].penetrationDist = abs(distBtwnObjects);
         res.points[0].contactID.key = 0;
-        res.normal = glm::normalize(tc1.worldPosition - tc2.worldPosition);
+        res.normal = glm::normalize(trueCenter1 - trueCenter2);
         computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }
@@ -572,21 +582,22 @@ void SphereVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent 
 void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     BoxColliderComponent cc2 = mWorld->getComponent<BoxColliderComponent>(c2);
-    glm::vec3 trueCenter = tc1.worldPosition;
+    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;
+    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;
     float trueRadius = cc1.radius;
 
     glm::mat4 boxOrientation = tc2.getOrientation();
-    trueCenter = glm::inverse(boxOrientation) * glm::vec4(trueCenter, 1);
+    trueCenter1 = glm::inverse(boxOrientation) * glm::vec4(trueCenter1, 1);
 
-    glm::vec3 p = glm::clamp(trueCenter, cc2.boxMin, cc2.boxMax);
-    float distance = glm::distance(p, trueCenter);
+    glm::vec3 p = glm::clamp(trueCenter1, -cc2.halfSize, cc2.halfSize);
+    float distance = glm::distance(p, trueCenter1);
     res.distBetweenObjects = distance - trueRadius;
     if (distance < trueRadius){
         res.numContacts = 1;
         res.points[0].point = boxOrientation * glm::vec4(p, 1);
         res.points[0].penetrationDist = abs(distance - trueRadius);
         res.points[0].contactID.key = 0;
-        res.normal = boxOrientation * glm::vec4(glm::normalize(trueCenter - p), 0);
+        res.normal = boxOrientation * glm::vec4(glm::normalize(trueCenter1 - p), 0);
         computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }
@@ -594,21 +605,22 @@ void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
 void BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent cc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);
-    glm::vec3 trueCenter = tc2.worldPosition;
+    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;        // Box true position
+    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;        // Sphere true position
     float trueRadius = cc2.radius;
 
     glm::mat4 boxOrientation = tc1.getOrientation();
-    trueCenter = glm::inverse(boxOrientation) * glm::vec4(trueCenter, 1);
+    trueCenter2 = glm::inverse(boxOrientation) * glm::vec4(trueCenter2, 1);
 
-    glm::vec3 p = glm::clamp(trueCenter, cc1.boxMin, cc1.boxMax);
-    float distance = glm::distance(p, trueCenter);
+    glm::vec3 p = glm::clamp(trueCenter2, -cc1.halfSize, cc1.halfSize);
+    float distance = glm::distance(p, trueCenter2);
     res.distBetweenObjects = distance - trueRadius;
     if (distance < trueRadius){
         res.numContacts = 1;
         res.points[0].point = boxOrientation * glm::vec4(p, 1);
         res.points[0].penetrationDist = abs(distance - trueRadius);
         res.points[0].contactID.key = 0;
-        res.normal = -(boxOrientation * glm::vec4(glm::normalize(trueCenter - p), 0));
+        res.normal = -(boxOrientation * glm::vec4(glm::normalize(trueCenter2 - p), 0));
         computeBasis(res.normal, res.tangent, res.tangent + 1);
     }
 }

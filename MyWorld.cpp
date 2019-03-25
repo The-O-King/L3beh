@@ -41,19 +41,19 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     else if (command == "Physics"){
         PhysicsComponent pc;
         data >> pc.type >> pc.gravityScale >> pc.mass >> pc.restitutionCoefficient >> pc.friction;
-        if (pc.mass <= 0)  pc.mass = 0.000001;
-        pc.invMass = 1/pc.mass;
+        if (pc.mass < 0)  pc.mass = 0;
+        pc.mass == 0 ? pc.invMass = 0 : pc.invMass = 1/pc.mass;
         addComponentToEntity<PhysicsComponent>(entityID, pc);
     }
     else if (command == "BoxCollider"){
         BoxColliderComponent cc;
-        data >> cc.isTrigger >> cc.boxMin.x >> cc.boxMin.y >> cc.boxMin.z >> cc.boxMax.x >> cc.boxMax.y >> cc.boxMax.z;
+        data >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z >> cc.halfSize.x >> cc.halfSize.y >> cc.halfSize.z;
         addComponentToEntity<BoxColliderComponent>(entityID, cc);
         addComponentToEntity<ColliderComponent>(entityID, cc);
     }
     else if (command == "SphereCollider"){
         SphereColliderComponent sc;
-        data >> sc.isTrigger >> sc.radius;
+        data >> sc.isTrigger >> sc.offset.x >> sc.offset.y >> sc.offset.z >> sc.radius;
         addComponentToEntity<SphereColliderComponent>(entityID, sc);
         addComponentToEntity<ColliderComponent>(entityID, sc);
     }
@@ -69,6 +69,7 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     }
     else if (command == "Projectile"){
         ProjectileComponent pc;
+        data >> pc.damage;
         addComponentToEntity<ProjectileComponent>(entityID, pc);
     }
     return true;

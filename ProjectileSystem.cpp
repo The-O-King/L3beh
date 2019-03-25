@@ -18,9 +18,15 @@ void ProjectileSystem::init(){
 
 void ProjectileSystem::update(float deltaTime){
     for (int e : entities){
-        ColliderComponent& cc = mWorld->getComponent<ColliderComponent>(e);
-        if (cc.collisionEnter.size() != 0){
-            mWorld->destroyEntity(e);
+        ProjectileComponent pc = mWorld->getComponent<ProjectileComponent>(e);
+        if (pc.damage > 0){
+            ColliderComponent& cc = mWorld->getComponent<ColliderComponent>(e);
+            if (cc.collisionEnter.size() != 0){
+                for (int toDestroy : cc.collisionEnter){
+                    mWorld->destroyEntity(toDestroy);
+                }
+                mWorld->destroyEntity(e);
+            }
         }
     } 
 }

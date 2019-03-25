@@ -100,5 +100,5 @@ void World::destroyEntities(){
 
 void World::destroyEntity(int entityID){
     if (liveEntities.find(entityID) != liveEntities.end())
-        entitiesToDestroy.push_back(entityID);
+        entitiesToDestroy.insert(entityID);
 }

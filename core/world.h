@@ -19,7 +19,7 @@ class World{
         std::vector<System*> mSystems;
         ComponentManager mComponents;
         std::unordered_map<int, componentSignature> liveEntities;
-        std::vector<int> entitiesToDestroy;
+        std::set<int> entitiesToDestroy;
         
     public:
         World();
