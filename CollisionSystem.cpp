@@ -65,7 +65,7 @@ void CollisionSystem::update(float deltaTime){
             TransformComponent &tc2 = mWorld->getComponent<TransformComponent>(entity2ID);
             ColliderComponent &cc2 = mWorld->getComponent<ColliderComponent>(entity2ID);
             PhysicsComponent &pc2 = mWorld->getComponent<PhysicsComponent>(entity2ID);
-            if (pc1.type == PhysicsType::STATIC && pc2.type == PhysicsType::STATIC)
+            if (pc1.mass == 0 && pc2.mass == 0)
                 continue;
 
             collisionInfo resNew(entity1ID, entity2ID);

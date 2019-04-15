@@ -28,14 +28,8 @@ struct PlayerMovementComponent{
 	float runSpeed = 6.0;
 };
 
-enum PhysicsType{
-	STATIC = 0,
-	KINEMATIC = 1,
-	DYNAMIC = 2
-};
 
 struct PhysicsComponent{
-	int type = 2;
 	float gravityScale = 1;
     glm::vec3 sumForces = {0.0f, 0.0f, 0.0f};
 	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
@@ -49,6 +43,9 @@ struct PhysicsComponent{
     glm::vec3 sumTorques = {0.0f, 0.0f, 0.0f};
 	glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
 	glm::vec3 angularAcceleration = {0.0f, 0.0f, 0.0f};
+
+	glm::vec3 lockRotation = {1.0f, 1.0f, 1.0f};
+	glm::vec3 lockPosition = {1.0f, 1.0f, 1.0f};
 };
 
 enum ColliderType{
@@ -86,6 +83,11 @@ struct CameraComponent{
 
 struct PointLightComponent{
 	float intensity = 0.0f;
+	glm::vec3 color = {0.0f, 0.0f, 0.0f};
+};
+
+struct DirectionalLightComponent{
+	glm::vec3 direction = {0.0f, 0.0f, 0.0f};
 	glm::vec3 color = {0.0f, 0.0f, 0.0f};
 };
 

@@ -29,6 +29,11 @@ RenderSystem::RenderSystem(World* w){
     pointLightEntities[type_id<PointLightComponent>()] = 1;
     pointLightEntities[type_id<TransformComponent>()] = 1;
     neededComponentSignatures.push_back(pointLightEntities);
+
+
+    componentSignature dirLightEntities;
+    dirLightEntities[type_id<DirectionalLightComponent>()] = 1;
+    neededComponentSignatures.push_back(dirLightEntities);
 }
 
 void RenderSystem::init(){
@@ -49,12 +54,16 @@ void RenderSystem::addEntity(int entityID, componentSignature sig){
         cameraEntities.insert(entityID);
     else if (sig == neededComponentSignatures[2])
         pointLightEntities.insert(entityID);
+    else if (sig == neededComponentSignatures[3])
+        dirLightEntity = entityID;
 }
 
 void RenderSystem::removeEntity(int entityID){
     cameraEntities.erase(entityID);
     renderableEntities.erase(entityID);
     pointLightEntities.erase(entityID);
+    if (entityID == dirLightEntity)
+        dirLightEntity = 0;
 
 }
 
@@ -68,7 +77,7 @@ void RenderSystem::update(float deltaTime){
             TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
             cameraPos = tc.worldPosition;  
             view = glm::inverse(tc.getTransformation());
-            projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 100.0f);
+            projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 200.0f);
         }
     }
 
@@ -95,6 +104,16 @@ void RenderSystem::update(float deltaTime){
     }
     GLuint numPointLightID = glGetUniformLocation(program, "numPointLight");
     glUniform1i(numPointLightID, count);
+
+    if (dirLightEntity != 0){
+        GLuint pos = glGetUniformLocation(program, "directionLight.direction");
+        DirectionalLightComponent &dc = mWorld->getComponent<DirectionalLightComponent>(dirLightEntity);
+        glUniform3f(pos, dc.direction.x, dc.direction.y, dc.direction.z);
+        pos = glGetUniformLocation(program, "directionLight.color");
+        glUniform3f(pos, dc.color.r, dc.color.g, dc.color.b);
+    }
+    GLuint hasDirLightID = glGetUniformLocation(program, "hasDirLight");
+    glUniform1i(hasDirLightID, dirLightEntity);
 
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);

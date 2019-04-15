@@ -24,7 +24,8 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<SphereColliderComponent>();
     mComponents.registerComponent<CameraComponent>();
     mComponents.registerComponent<PointLightComponent>();
-    mComponents.registerComponent<ProjectileComponent>();
+    mComponents.registerComponent<DirectionalLightComponent>();
+    mComponents.registerComponent<ProjectileComponent>();    
 }
 
 bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstream& data){
@@ -40,7 +41,9 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
     }
     else if (command == "Physics"){
         PhysicsComponent pc;
-        data >> pc.type >> pc.gravityScale >> pc.mass >> pc.restitutionCoefficient >> pc.friction;
+        data >> pc.mass >> pc.gravityScale >> pc.restitutionCoefficient >> pc.friction >> pc.lockRotation.x >> pc.lockRotation.y >> pc.lockRotation.z >> pc.lockPosition.x >> pc.lockPosition.y >> pc.lockPosition.z;
+        pc.lockRotation.x = pc.lockRotation.x ? 0 : 1; pc.lockRotation.y = pc.lockRotation.y ? 0 : 1; pc.lockRotation.z = pc.lockRotation.z ? 0 : 1;
+        pc.lockPosition.x = pc.lockPosition.x ? 0 : 1; pc.lockPosition.y = pc.lockPosition.y ? 0 : 1; pc.lockPosition.z = pc.lockPosition.z ? 0 : 1;
         if (pc.mass < 0)  pc.mass = 0;
         pc.mass == 0 ? pc.invMass = 0 : pc.invMass = 1/pc.mass;
         addComponentToEntity<PhysicsComponent>(entityID, pc);
@@ -66,6 +69,11 @@ bool MyWorld::customWorldGen(int entityID, std::string command, std::istringstre
         PointLightComponent pc;
         data >> pc.intensity >> pc.color.r >> pc.color.g >> pc.color.b;
         addComponentToEntity<PointLightComponent>(entityID, pc);
+    }
+    else if (command == "DirectionalLight"){
+        DirectionalLightComponent dc;
+        data >> dc.color.r >> dc.color.g >> dc.color.b >> dc.direction.x >> dc.direction.y >> dc.direction.z;
+        addComponentToEntity<DirectionalLightComponent>(entityID, dc);
     }
     else if (command == "Projectile"){
         ProjectileComponent pc;

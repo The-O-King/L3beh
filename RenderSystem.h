@@ -18,6 +18,7 @@ class RenderSystem : public System{
         std::set<int> renderableEntities;
         std::set<int> pointLightEntities;
         std::set<int> cameraEntities;
+        int dirLightEntity = 0;
         
     public:
         RenderSystem(World* w);

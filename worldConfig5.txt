@@ -1,0 +1,50 @@
+Entity Player
+PlayerMovement 1
+Physics 1 1 1 1     1 1 1    0 0 0
+SphereCollider 0    0 0 0   1
+Transform 0    0 0 -2   0 0 0  1 1 1
+Camera 1 60
+/Entity
+
+Entity Light
+Transform 1    0 0 -3   0 0 0  1 1 1
+PointLight 1 1 1 1
+/Entity
+
+Entity Light
+DirectionalLight 1 1 1   -.75 -.75 -1
+/Entity
+
+Entity Floor
+Physics 0 0 1 1     1 1 1   0 0 0
+BoxCollider 0    0 0 0   100 .5 100
+Transform 0    0 -5 -10   0 0 0  200 1 200
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity
+
+
+Entity WallLeft
+Physics 0 0 1 .2     1 1 1   0 0 0
+BoxCollider 0     0 0 0   .5 5 5
+Transform 0    -5 -1 -10   0 0 0  1 10 10
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity
+
+Entity WallRight
+Physics 0 0 1 .2     1 1 1   0 0 0
+BoxCollider 0     0 0 0   .5 5 5
+Transform 0    5 -1 -10   0 0 0  1 10 10
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity
+
+Entity WallBack
+Physics 0 0 1 .2     1 1 1   0 0 0
+BoxCollider 0     0 0 0   5 5 .5
+Transform 0    0 -1 -15   0 0 0  10 10 1
+Render cube.obj cube.jpg 1 1 1 1 1 1 2
+/Entity
+
+Entity Sky
+Transform 0    0 0 0   0 0 0  100 100 100
+Render cube.obj cSky.jpg 2 2 2 1 1 1 1
+/Entity

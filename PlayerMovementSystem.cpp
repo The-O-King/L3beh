@@ -8,7 +8,7 @@
 
 std::string testEntity[] = { 
     "Entity PhysicsBall\n"
-    "Physics 2 1 1 1 .5\n"
+    "Physics 1 1 1 .5     0 0 0   0 0 0\n"
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "SphereCollider 0    0 0 0   1\n"
     "Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
@@ -16,7 +16,7 @@ std::string testEntity[] = {
     "/Entity\n",
     
     "Entity PhysicsCube\n"
-    "Physics 2 1 1 1 .5\n"
+    "Physics 1 1 1 .5     0 0 0   0 0 0\n"
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "BoxCollider 0      0 0 0    .5 .5 .5\n"
     "Render cube.obj cube.jpg  1 1 1 1 1 1 32\n"
@@ -52,16 +52,16 @@ void PlayerMovementSystem::update(float deltaTime){
                 speed = pc.walkSpeed;
             }
             if (Input::getKey(GLFW_KEY_W)){      
-                tc.position += forward * 5.0f * deltaTime;
+                tc.position += forward * speed * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_S)){
-                tc.position -= forward * 5.0f * deltaTime;
+                tc.position -= forward * speed * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_A)){
-                tc.position += left * 5.0f * deltaTime;
+                tc.position += left * speed * deltaTime;
             }
             if (Input::getKey(GLFW_KEY_D)){
-                tc.position -= left * 5.0f * deltaTime;
+                tc.position -= left * speed * deltaTime;
             }
 
             double xdelta, ydelta;
@@ -77,8 +77,7 @@ void PlayerMovementSystem::update(float deltaTime){
                 temp2.position = tc.worldPosition + (lookDir * 4.0f);
                 temp2.rotation = tc.worldRotation;
                 PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
-                temp.velocity = lookDir * 100.0f;
-                temp.gravityScale = .1;
+                temp.velocity = lookDir * 20.0f;
             }
             if (Input::getKeyDown(GLFW_KEY_EQUAL)){
                 int temp = 0;
