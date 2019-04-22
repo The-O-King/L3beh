@@ -36,6 +36,47 @@ int World::createEntity(std::istream& entityConfig){
                 parentTransform.childEntities.insert(baby);
                 addComponentToEntity<TransformComponent>(baby, tc);
             }
+            else if (command == "Render"){
+                RenderComponent rc;
+                currLine >> rc.modelFileName >> rc.textureName >> rc.diffuse.r >> rc.diffuse.g >> rc.diffuse.b >> rc.specular.r >> rc.specular.g >> rc.specular.b >> rc.shininess;
+                addComponentToEntity<RenderComponent>(baby, rc);
+            }
+            else if (command == "Physics"){
+                PhysicsComponent pc;
+                currLine >> pc.mass >> pc.gravityScale >> pc.restitutionCoefficient >> pc.friction >> pc.lockRotation.x >> pc.lockRotation.y >> pc.lockRotation.z >> pc.lockPosition.x >> pc.lockPosition.y >> pc.lockPosition.z;
+                pc.lockRotation.x = pc.lockRotation.x ? 0 : 1; pc.lockRotation.y = pc.lockRotation.y ? 0 : 1; pc.lockRotation.z = pc.lockRotation.z ? 0 : 1;
+                pc.lockPosition.x = pc.lockPosition.x ? 0 : 1; pc.lockPosition.y = pc.lockPosition.y ? 0 : 1; pc.lockPosition.z = pc.lockPosition.z ? 0 : 1;
+                if (pc.mass < 0)  pc.mass = 0;
+                pc.mass == 0 ? pc.invMass = 0 : pc.invMass = 1/pc.mass;
+                addComponentToEntity<PhysicsComponent>(baby, pc);
+            }
+            else if (command == "BoxCollider"){
+                BoxColliderComponent cc;
+                currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z >> cc.halfSize.x >> cc.halfSize.y >> cc.halfSize.z;
+                addComponentToEntity<BoxColliderComponent>(baby, cc);
+                addComponentToEntity<ColliderComponent>(baby, cc);
+            }
+            else if (command == "SphereCollider"){
+                SphereColliderComponent sc;
+                currLine >> sc.isTrigger >> sc.offset.x >> sc.offset.y >> sc.offset.z >> sc.radius;
+                addComponentToEntity<SphereColliderComponent>(baby, sc);
+                addComponentToEntity<ColliderComponent>(baby, sc);
+            }
+            else if (command == "Camera"){
+                CameraComponent cc;
+                currLine >> cc.isActive >> cc.fov;
+                addComponentToEntity<CameraComponent>(baby, cc);
+            }
+            else if (command == "PointLight"){
+                PointLightComponent pc;
+                currLine >> pc.intensity >> pc.color.r >> pc.color.g >> pc.color.b;
+                addComponentToEntity<PointLightComponent>(baby, pc);
+            }
+            else if (command == "DirectionalLight"){
+                DirectionalLightComponent dc;
+                currLine >> dc.color.r >> dc.color.g >> dc.color.b >> dc.direction.x >> dc.direction.y >> dc.direction.z;
+                addComponentToEntity<DirectionalLightComponent>(baby, dc);
+            }            
             else{
                 customWorldGen(baby, command, currLine);
             }
