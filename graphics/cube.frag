@@ -71,5 +71,5 @@ void main(){
         res += calcDirLight(directionLight);
     }
 
-    FragColor = vec4(res * texture(texture, fragTexCoord), 1.0);
+    FragColor = vec4(res, 1.0) * texture2D(texture, fragTexCoord);
 }

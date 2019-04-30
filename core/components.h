@@ -21,20 +21,22 @@ struct TransformComponent{
 
 	int parentEntity = -1;
 	set<int> childEntities;
-
-	glm::mat3 getRotation(){
-		return glm::mat3(worldRotation);	
-	}
-	glm::mat4 getTransformation(){
-        glm::mat4 model = glm::translate(glm::mat4(1.0), worldPosition);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0), worldScale);
-		return model * glm::mat4(worldRotation) * scale;
-	}
-	glm::mat4 getOrientation(){
-        glm::mat4 model = glm::translate(glm::mat4(1.0), worldPosition);
-		return model * glm::mat4(worldRotation);
-	}
 };
+
+inline glm::mat3 getRotation(TransformComponent& tc){
+	return glm::mat3(tc.worldRotation);	
+}
+
+inline glm::mat4 getTransformation(TransformComponent& tc){
+	glm::mat4 model = glm::translate(glm::mat4(1.0), tc.worldPosition);
+	glm::mat4 scale = glm::scale(glm::mat4(1.0), tc.worldScale);
+	return model * glm::mat4(tc.worldRotation) * scale;
+}
+
+inline glm::mat4 getOrientation(TransformComponent& tc){
+	glm::mat4 model = glm::translate(glm::mat4(1.0), tc.worldPosition);
+	return model * glm::mat4(tc.worldRotation);
+}
 
 struct RenderComponent{
 	string modelFileName;

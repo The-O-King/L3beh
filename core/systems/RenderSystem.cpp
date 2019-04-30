@@ -75,7 +75,7 @@ void RenderSystem::update(float deltaTime){
         if (cc.isActive){
             TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
             cameraPos = tc.worldPosition;  
-            view = glm::inverse(tc.getTransformation());
+            view = glm::inverse(getTransformation(tc));
             projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 200.0f);
         }
     }
@@ -118,7 +118,7 @@ void RenderSystem::update(float deltaTime){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
         
-        glm::mat4 model = tc.getTransformation();
+        glm::mat4 model = getTransformation(tc);
 
         glm::mat4 mvp = projection * view * model;
         glm::mat3 invT = glm::transpose(glm::inverse(model));

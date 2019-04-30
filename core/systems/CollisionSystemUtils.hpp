@@ -67,7 +67,6 @@ struct collisionInfo{
         normal = other.normal;
         tangent[0] = other.tangent[0];
         tangent[1] = other.tangent[1];
-        numContacts = other.numContacts;
 
         contactPoint merged[8];
         for (int x = 0; x < other.numContacts; x++){
@@ -94,6 +93,8 @@ struct collisionInfo{
                 merged[x] = other.points[x];
             }
         }
+
+        numContacts = other.numContacts;
         for (int x = 0; x < numContacts; x++){
             points[x] = merged[x];
         }
@@ -396,8 +397,8 @@ float separatingDistance(const glm::vec3& RPos, const glm::vec3& Plane, const OB
 void BoxVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent cc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     BoxColliderComponent cc2 = mWorld->getComponent<BoxColliderComponent>(c2);
-    glm::mat4 orientation1 = tc1.getOrientation();
-    glm::mat4 orientation2 = tc2.getOrientation();
+    glm::mat4 orientation1 = getOrientation(tc1);
+    glm::mat4 orientation2 = getOrientation(tc2);
     OBB obb1, obb2;
     obb1.AxisX = glm::vec3(orientation1[0]);
     obb1.AxisY = glm::vec3(orientation1[1]);
@@ -585,7 +586,7 @@ void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
     glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;
     float trueRadius = cc1.radius;
 
-    glm::mat4 boxOrientation = tc2.getOrientation();
+    glm::mat4 boxOrientation = getOrientation(tc2);
     trueCenter1 = glm::inverse(boxOrientation) * glm::vec4(trueCenter1, 1);
 
     glm::vec3 p = glm::clamp(trueCenter1, -cc2.halfSize, cc2.halfSize);
@@ -608,7 +609,7 @@ void BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
     glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;        // Sphere true position
     float trueRadius = cc2.radius;
 
-    glm::mat4 boxOrientation = tc1.getOrientation();
+    glm::mat4 boxOrientation = getOrientation(tc1);
     trueCenter2 = glm::inverse(boxOrientation) * glm::vec4(trueCenter2, 1);
 
     glm::vec3 p = glm::clamp(trueCenter2, -cc1.halfSize, cc1.halfSize);

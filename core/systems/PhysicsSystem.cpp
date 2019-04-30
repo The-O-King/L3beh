@@ -32,8 +32,8 @@ void PhysicsSystem::update(float deltaTime){
         phys.velocity += avg_accel * deltaTime;
         phys.acceleration = new_accel;
         
-        glm::mat3 invInertia = glm::mat3(6);
-        invInertia = tc.getRotation() * invInertia * glm::transpose(tc.getRotation());
+        glm::mat3 invInertia = phys.invInertia;
+        invInertia = getRotation(tc) * invInertia * glm::transpose(getRotation(tc));
         glm::vec3 new_accel_angular = invInertia * phys.sumTorques;
         glm::vec3 avg_accel_angular = (last_accel_angular + new_accel_angular) * 0.5f;
         phys.angularVelocity += avg_accel_angular * deltaTime;
