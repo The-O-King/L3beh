@@ -583,7 +583,6 @@ void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
     SphereColliderComponent cc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     BoxColliderComponent cc2 = mWorld->getComponent<BoxColliderComponent>(c2);
     glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;
-    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;
     float trueRadius = cc1.radius;
 
     glm::mat4 boxOrientation = getOrientation(tc2);
@@ -605,7 +604,6 @@ void SphereVsBox(int c1, TransformComponent &tc1, int c2, TransformComponent &tc
 void BoxVsSphere(int c1, TransformComponent &tc1, int c2, TransformComponent &tc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent cc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     SphereColliderComponent cc2 = mWorld->getComponent<SphereColliderComponent>(c2);
-    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;        // Box true position
     glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;        // Sphere true position
     float trueRadius = cc2.radius;
 

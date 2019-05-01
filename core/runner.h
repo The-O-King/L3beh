@@ -50,6 +50,7 @@ inline int run(World& gameWorld, std::string worldConfigFile)
     }
     /* Loop until the user closes the window */
     float dt = 1.0/240;
+    Input::resetKeyState();
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
