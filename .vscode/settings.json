@@ -10,5 +10,13 @@
         "new": "cpp",
         "utility": "cpp",
         "*.tcc": "cpp"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\techm\\OneDrive\\Projects\\2019 - H1 - L3beh",
+            "binaryPath": "c:\\Users\\techm\\OneDrive\\Projects\\2019 - H1 - L3beh\\output",
+            "binaryArgs": []
+        }
+    ],
+    "makefile.extensionOutputFolder": "./.vscode/makeoutput",
 }

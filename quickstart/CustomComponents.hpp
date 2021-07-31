@@ -7,6 +7,11 @@ struct PlayerMovementComponent{
     float jumpForce = 500.0f;
     bool isJumping = false;
     bool isRunning = false;
+    int currProjectile = 0;
+};
+
+struct ProjectileComponent{
+	float damage = 0;
 };
 
 #endif

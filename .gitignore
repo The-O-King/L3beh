@@ -1,0 +1,6 @@
+*.o
+/compile
+/build
+*.exe
+*.log
+/.vscode

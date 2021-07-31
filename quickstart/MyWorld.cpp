@@ -5,6 +5,7 @@
 #include "core/systems/CollisionSystem.h"
 #include "core/systems/RenderSystem.h"
 #include "PlayerMovementSystem.h"
+#include "ProjectileSystem.h"
 #include "MyWorld.h"
 
 MyWorld::MyWorld(){
@@ -12,6 +13,7 @@ MyWorld::MyWorld(){
     mSystems.push_back(new RenderSystem(this));
     // Add custom Systems here
     mSystems.push_back(new PlayerMovementSystem(this));
+    mSystems.push_back(new ProjectileSystem(this));
     // Stop adding custom Systems here
     mSystems.push_back(new CollisionSystem(this));
     mSystems.push_back(new PhysicsSystem(this));
@@ -26,6 +28,7 @@ MyWorld::MyWorld(){
     mComponents.registerComponent<DirectionalLightComponent>();
     // Register Custom components here
     mComponents.registerComponent<PlayerMovementComponent>();
+    mComponents.registerComponent<ProjectileComponent>();    
 }
 
 bool MyWorld::customWorldGen(int entityID, 
@@ -35,6 +38,11 @@ bool MyWorld::customWorldGen(int entityID,
         PlayerMovementComponent pc;
         data >> pc.walkSpeed >> pc.runSpeed;
         addComponentToEntity<PlayerMovementComponent>(entityID, pc);
+    }
+    else if (command == "Projectile"){
+        ProjectileComponent pc;
+        data >> pc.damage;
+        addComponentToEntity<ProjectileComponent>(entityID, pc);
     }
     return true;
 }
