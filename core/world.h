@@ -100,7 +100,7 @@ void World::removeComponentFromEntity(int entityID){
 
 template <class T>
 T& World::getComponent(int entityID){
-    return mComponents.getComponent<T>(entityID);
+    return *mComponents.getComponent<T>(entityID);
 }
 
 template <class T>

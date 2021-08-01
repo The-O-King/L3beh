@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
  
-#include "component_utils.h"
+#include "componentManager.h"
 #include <vector>
 #include <set>
 class World;
