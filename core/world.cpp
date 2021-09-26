@@ -1,4 +1,5 @@
 #include "world.h"
+#include <iostream>
 
 World::World(){
     currID = 0;
@@ -98,6 +99,8 @@ bool World::baseWorldGen(std::string worldConfigFile){
 
     std::ifstream inputFile;
     inputFile.open(worldConfigFile, std::ifstream::in);
+    if (!inputFile.is_open())
+        return false;
 
     while(!inputFile.eof()){
         createEntity(inputFile);
