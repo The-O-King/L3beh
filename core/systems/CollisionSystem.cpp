@@ -68,7 +68,7 @@ void CollisionSystem::update(float deltaTime){
                 continue;
 
             collisionInfo resNew(entity1ID, entity2ID);
-            collisionTestTable[cc1.type][cc2.type](entity1ID, tc1, entity2ID, tc2, resNew, mWorld);
+            collisionTestTable[cc1.type][cc2.type](entity1ID, tc1, cc1, entity2ID, tc2, cc2, resNew, mWorld);
             collisionInfoKey key(resNew);
 
             if (resNew.numContacts > 0){
@@ -102,10 +102,6 @@ void CollisionSystem::update(float deltaTime){
 
                 float invMass1 = pc1.invMass, invMass2 = pc2.invMass;
                 glm::mat3 invInertia1 = pc1.invInertia, invInertia2 = pc2.invInertia;
-
-                // Pre Solving Computations
-                float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
-                float mu = sqrt(pc1.friction * pc2.friction);
                 for (int w = 0; w < res->numContacts; w++){
                     contactPoint cp = res->points[w];
                     res->points[w].r1 = cp.point - tc1.worldPosition;
@@ -131,43 +127,6 @@ void CollisionSystem::update(float deltaTime){
                     pc1.angularVelocity -= invInertia1 * glm::cross(res->points[w].r1, P);
                     pc2.velocity += invMass2 * P;
                     pc2.angularVelocity += invInertia2 * glm::cross(res->points[w].r2, P);
-                }
-
-                for (int q = 0; q < 4; q++){
-                    for (int w = 0; w < res->numContacts; w++){
-                        // Normal Impulse
-                        glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res->points[w].r2) - glm::cross(pc1.angularVelocity, res->points[w].r1);
-                        float velocityAlongNormal = glm::dot(relativeVelocity, res->normal);
-                        float j = (-velocityAlongNormal + res->points[w].bias) * res->points[w].massNormal;
-                        
-                        float temp = res->points[w].Pn;
-                        res->points[w].Pn = min(temp + j, 0.0f);
-                        j = res->points[w].Pn - temp;
-
-                        glm::vec3 P = j * res->normal;
-                        pc1.velocity -= invMass1 * P;
-                        pc1.angularVelocity -= invInertia1 * glm::cross(res->points[w].r1, P);
-                        pc2.velocity += invMass2 * P;
-                        pc2.angularVelocity += invInertia2 * glm::cross(res->points[w].r2, P);
-
-                        // Friction Impulse
-                        relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res->points[w].r2) - glm::cross(pc1.angularVelocity, res->points[w].r1);
-                        for (int z = 0; z < 2; z++){
-                            float velocityAlongTangent = glm::dot(relativeVelocity, res->tangent[z]); 
-                            float j = -velocityAlongTangent * res->points[w].massTangent[z];
-                            float maxJ = mu * res->points[w].Pn;
-
-                            float temp = res->points[w].Pt[z];
-                            res->points[w].Pt[z] = glm::clamp(temp + j, maxJ, -maxJ); // Negate the larger one because Pn is negative
-                            j = res->points[w].Pt[z] - temp;
-
-                            glm::vec3 P = j * res->tangent[z];
-                            pc1.velocity -= invMass1 * P;
-                            pc1.angularVelocity -= invInertia1 * glm::cross(res->points[w].r1, P);
-                            pc2.velocity += invMass2 * P;
-                            pc2.angularVelocity += invInertia2 * glm::cross(res->points[w].r2, P);
-                        }
-                    }
                 }
             }
             else{
@@ -211,5 +170,53 @@ void CollisionSystem::update(float deltaTime){
                 }
             }
         }
+    }
+
+    for (int x = 0; x < 10; x++){
+        for (auto arb = persistentCollisionData.begin(); arb != persistentCollisionData.end(); arb++) {
+            PhysicsComponent &pc1 = mWorld->getComponent<PhysicsComponent>(arb->second.entity1);
+            PhysicsComponent &pc2 = mWorld->getComponent<PhysicsComponent>(arb->second.entity2);
+            auto res = &arb->second;
+
+            float invMass1 = pc1.invMass, invMass2 = pc2.invMass;
+            glm::mat3 invInertia1 = pc1.invInertia, invInertia2 = pc2.invInertia;
+            float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+            float mu = sqrt(pc1.friction * pc2.friction);
+
+            for (int w = 0; w < res->numContacts; w++){
+                // Normal Impulse
+                glm::vec3 relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res->points[w].r2) - glm::cross(pc1.angularVelocity, res->points[w].r1);
+                float velocityAlongNormal = glm::dot(relativeVelocity, res->normal);
+                float j = (-velocityAlongNormal + res->points[w].bias) * res->points[w].massNormal;
+                
+                float temp = res->points[w].Pn;
+                res->points[w].Pn = min(temp + j, 0.0f);
+                j = res->points[w].Pn - temp;
+
+                glm::vec3 P = j * res->normal;
+                pc1.velocity -= invMass1 * P;
+                pc1.angularVelocity -= invInertia1 * glm::cross(res->points[w].r1, P);
+                pc2.velocity += invMass2 * P;
+                pc2.angularVelocity += invInertia2 * glm::cross(res->points[w].r2, P);
+
+                // Friction Impulse
+                relativeVelocity = pc2.velocity - pc1.velocity + glm::cross(pc2.angularVelocity, res->points[w].r2) - glm::cross(pc1.angularVelocity, res->points[w].r1);
+                for (int z = 0; z < 2; z++){
+                    float velocityAlongTangent = glm::dot(relativeVelocity, res->tangent[z]); 
+                    float j = -velocityAlongTangent * res->points[w].massTangent[z];
+                    float maxJ = mu * res->points[w].Pn;
+
+                    float temp = res->points[w].Pt[z];
+                    res->points[w].Pt[z] = glm::clamp(temp + j, maxJ, -maxJ); // Negate the larger one because Pn is negative
+                    j = res->points[w].Pt[z] - temp;
+
+                    glm::vec3 P = j * res->tangent[z];
+                    pc1.velocity -= invMass1 * P;
+                    pc1.angularVelocity -= invInertia1 * glm::cross(res->points[w].r1, P);
+                    pc2.velocity += invMass2 * P;
+                    pc2.angularVelocity += invInertia2 * glm::cross(res->points[w].r2, P);
+                }
+            }
+        }    
     }
 }

@@ -86,17 +86,11 @@ struct ColliderComponent{
 	set<int> collisionExit;
 };
 
-struct BoxColliderComponent : ColliderComponent {
-	BoxColliderComponent(){
-		type = ColliderType::BOX;
-	}
+struct BoxColliderComponent {
 	glm::vec3 halfSize = {0.0f, 0.0f, 0.0f};
 };
 
-struct SphereColliderComponent : ColliderComponent {
-	SphereColliderComponent(){
-		type = ColliderType::SPHERE;
-	}
+struct SphereColliderComponent {
 	float radius;
 };
 

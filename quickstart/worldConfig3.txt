@@ -39,7 +39,7 @@ Render cube.obj cube.jpg 1 1 1 1 1 1 2
 
 Entity cube
 Transform 0    0 2 -5    0 0 0  1 1 1
-PlayerMovement 1
+PlayerMovement 1 2
 Physics 1 1 1 .4   0 0 0   0 0 0
 BoxCollider 0     0 0 0    .5 .5 .5
 Render cube.obj cube.jpg 1 1 1 1 1 1 2

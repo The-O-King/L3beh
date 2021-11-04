@@ -52,16 +52,22 @@ int World::createEntity(std::istream& entityConfig){
                 addComponentToEntity<PhysicsComponent>(baby, pc);
             }
             else if (command == "BoxCollider"){
-                BoxColliderComponent cc;
-                currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z >> cc.halfSize.x >> cc.halfSize.y >> cc.halfSize.z;
-                addComponentToEntity<BoxColliderComponent>(baby, cc);
+                ColliderComponent cc;
+                BoxColliderComponent bc;
+                cc.type = ColliderType::BOX;
+                currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z;
+                currLine >> bc.halfSize.x >> bc.halfSize.y >> bc.halfSize.z;
                 addComponentToEntity<ColliderComponent>(baby, cc);
+                addComponentToEntity<BoxColliderComponent>(baby, bc);
             }
             else if (command == "SphereCollider"){
+                ColliderComponent cc;
                 SphereColliderComponent sc;
-                currLine >> sc.isTrigger >> sc.offset.x >> sc.offset.y >> sc.offset.z >> sc.radius;
+                cc.type = ColliderType::SPHERE;
+                currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z;
+                currLine >> sc.radius;
+                addComponentToEntity<ColliderComponent>(baby, cc);
                 addComponentToEntity<SphereColliderComponent>(baby, sc);
-                addComponentToEntity<ColliderComponent>(baby, sc);
             }
             else if (command == "Camera"){
                 CameraComponent cc;
