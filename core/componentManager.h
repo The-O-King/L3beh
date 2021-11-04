@@ -35,7 +35,7 @@ class ComponentList : public ComponentListInterface {
         std::unordered_map<int, int> entityToIndex;
 
     public:
-        ComponentList() { }
+        ComponentList() { data.reserve(200); }
 
         bool addComponent(int entity, std::any initialComp) {
             if (entityToIndex.find(entity) == entityToIndex.end()){
