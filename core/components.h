@@ -42,12 +42,6 @@ struct RenderComponent{
 	string modelFileName;
 	string textureName;
 
-	unsigned int vertex_vbo = 0;
-	unsigned int texCoord_vbo = 0;
-	unsigned int normal_vbo = 0;
-    unsigned int numVert = 0;
-	unsigned int texture = 0;
-
 	glm::vec3 diffuse = {0.0f, 0.0f, 0.0f};
 	glm::vec3 specular = {0.0f, 0.0f, 0.0f};
 	float shininess = 0;

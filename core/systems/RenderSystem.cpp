@@ -36,8 +36,6 @@ RenderSystem::RenderSystem(World* w){
 }
 
 void RenderSystem::init(){
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
     glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glClearColor(.2f, .5f, .3f, 1.0);
@@ -123,27 +121,19 @@ void RenderSystem::update(float deltaTime){
         glm::mat4 mvp = projection * view * model;
         glm::mat3 invT = glm::transpose(glm::inverse(model));
 
-        glBindTexture(GL_TEXTURE_2D, rc.texture);
+        glBindTexture(GL_TEXTURE_2D, loadedTextures[rc.textureName]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glBindBuffer(GL_ARRAY_BUFFER, rc.vertex_vbo);  
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,0, (void*)0);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, rc.texCoord_vbo);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, rc.normal_vbo);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        glEnableVertexAttribArray(2);
+        glBindVertexArray(loadedVAO[rc.modelFileName]);
         glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
         glUniformMatrix3fv(invTID, 1, GL_FALSE, &invT[0][0]);
         glUniform3f(materialSpecID, rc.specular.r, rc.specular.g, rc.specular.b);
         glUniform3f(materialDiffID, rc.diffuse.r, rc.diffuse.g, rc.diffuse.b);
         glUniform1f(materialShineID, rc.shininess);
-        glDrawArrays(GL_TRIANGLES, 0, rc.numVert);
+        glDrawArrays(GL_TRIANGLES, 0, loadedVertexBuffersTris[rc.modelFileName]);
     }
 }
 
@@ -154,30 +144,34 @@ void RenderSystem::loadModel(RenderComponent& rc){
         std::vector<glm::vec3> normals;
         loadOBJ(("graphics/" + rc.modelFileName).c_str(), vertices, texCoords, normals);
 
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        loadedVAO[rc.modelFileName] = vao;
+        glBindVertexArray(vao);
+        
         GLuint VBO;
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
         loadedVertexBuffers[rc.modelFileName] = VBO;
         loadedVertexBuffersTris[rc.modelFileName] = vertices.size();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,0, (void*)0);
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * texCoords.size(), texCoords.data(), GL_STATIC_DRAW);
         loadedTexCoordBuffers[rc.modelFileName] = VBO;
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.data(), GL_STATIC_DRAW);
         loadedNormalBuffers[rc.modelFileName] = VBO;
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     }
-    rc.vertex_vbo = loadedVertexBuffers[rc.modelFileName];
-    rc.texCoord_vbo = loadedTexCoordBuffers[rc.modelFileName];
-    rc.normal_vbo = loadedNormalBuffers[rc.modelFileName];
-    rc.numVert = loadedVertexBuffersTris[rc.modelFileName];
 
     if (loadedTextures.find(rc.textureName) == loadedTextures.end()){
         GLuint texID;
@@ -192,5 +186,4 @@ void RenderSystem::loadModel(RenderComponent& rc){
         loadedTextures[rc.textureName] = texID;
         stbi_image_free(data);
     }
-    rc.texture = loadedTextures[rc.textureName];
 }
