@@ -1,6 +1,6 @@
-#define GLFW_DLL
 #define GLEW_STATIC
 #include <GL/glew.h>
+#define GLFW_DLL
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <iomanip>

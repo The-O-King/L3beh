@@ -3,6 +3,7 @@
 
 #include "../system.h"
 #include "../components.h"
+#include "RenderSystemUtils.hpp"
 #include <unordered_map>
 
 class RenderSystem : public System{
@@ -13,7 +14,7 @@ class RenderSystem : public System{
         std::unordered_map<std::string, GLuint> loadedNormalBuffers;
         std::unordered_map<std::string, GLuint> loadedTextures;
         std::unordered_map<std::string, GLuint> loadedVAO;
-        GLuint program;
+        Shader program;
 
         std::set<int> renderableEntities;
         std::set<int> pointLightEntities;

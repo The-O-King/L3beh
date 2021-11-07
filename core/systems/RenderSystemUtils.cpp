@@ -10,9 +10,6 @@ using namespace std;
 
 #include <stdlib.h>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-
 #include "../glm/glm.hpp"
 
 #include "RenderSystemUtils.hpp"
@@ -212,4 +209,30 @@ GLuint loadShaders(const char * vertex_file_path,const char * fragment_file_path
 	glDeleteShader(FragmentShaderID);
 
 	return ProgramID;
+}
+
+Shader::Shader() { };
+
+Shader::Shader(std::string vert, std::string frag) {
+	program = loadShaders(vert.c_str(), frag.c_str());
+	mvpID = glGetUniformLocation(program, "MVP");
+	invTID = glGetUniformLocation(program, "invTranspose");
+	modelID = glGetUniformLocation(program, "model");
+	materialSpecID = glGetUniformLocation(program, "mat.specular");
+	materialDiffID = glGetUniformLocation(program, "mat.diffuse");
+	materialShineID = glGetUniformLocation(program, "mat.shininess");
+	cameraPosID = glGetUniformLocation(program, "cameraPos");
+	numPointLightID = glGetUniformLocation(program, "numPointLight");
+	directionLightDirectionID = glGetUniformLocation(program, "directionLight.direction");
+	directionLightColorID = glGetUniformLocation(program, "directionLight.color");
+	hasDirLightID = glGetUniformLocation(program, "hasDirLight");
+	
+	positionLightsPosition.reserve(MAX_LIGHTS);
+	positionLightsColor.reserve(MAX_LIGHTS);
+	positionLightsIntensity.reserve(MAX_LIGHTS);
+	for (int x = 0; x < MAX_LIGHTS; x++){
+		positionLightsPosition.emplace_back(glGetUniformLocation(program, ("pointLights[" + to_string(x) + "].position").c_str()));
+		positionLightsColor.emplace_back(glGetUniformLocation(program, ("pointLights[" + to_string(x) + "].color").c_str()));
+		positionLightsIntensity.emplace_back(glGetUniformLocation(program, ("pointLights[" + to_string(x) + "].intensity").c_str()));
+	}
 }

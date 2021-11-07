@@ -1,11 +1,14 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#define GLEW_STATIC
+#include <GL/glew.h>
 #define GLFW_DLL
+#include <GLFW/glfw3.h>
+
 #include "system.h"
 #include "componentManager.h"
 #include "components.h"
-#include <GLFW/glfw3.h>
 #include <unordered_map>
 #include <fstream>
 #include <sstream> 

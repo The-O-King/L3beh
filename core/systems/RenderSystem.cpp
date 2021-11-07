@@ -1,14 +1,8 @@
-#define GLFW_DLL
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "../glm/glm.hpp"
-#include "../glm/gtc/matrix_transform.hpp"
-
 #include "RenderSystem.h"
 #include "../components.h"
 #include "../world.h"
-#include "RenderSystemUtils.hpp"
+#include "../glm/glm.hpp"
+#include "../glm/gtc/matrix_transform.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -39,7 +33,7 @@ void RenderSystem::init(){
     glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glClearColor(.2f, .5f, .3f, 1.0);
-    program = loadShaders("graphics/cube.vert", "graphics/cube.frag");
+    program = Shader("graphics/cube.vert", "graphics/cube.frag");
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
@@ -78,39 +72,25 @@ void RenderSystem::update(float deltaTime){
         }
     }
 
-    glUseProgram(program);
-    GLuint mvpID = glGetUniformLocation(program, "MVP");
-    GLuint invTID = glGetUniformLocation(program, "invTranspose");
-    GLuint modelID = glGetUniformLocation(program, "model");
-    GLuint materialSpecID = glGetUniformLocation(program, "mat.specular");
-    GLuint materialDiffID = glGetUniformLocation(program, "mat.diffuse");
-    GLuint materialShineID = glGetUniformLocation(program, "mat.shininess");
-
-    GLuint cameraPosID = glGetUniformLocation(program, "cameraPos");
-    glUniform3f(cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
+    glUseProgram(program.program);
+    glUniform3f(program.cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
     int count = 0;
-    for (int e : pointLightEntities){
-        GLuint pos = glGetUniformLocation(program, ("pointLights[" + to_string(count) + "].position").c_str());
+    for (int e : pointLightEntities) {
         TransformComponent &tc = mWorld->getComponent<TransformComponent>(e);
-        glUniform3f(pos, tc.worldPosition.x, tc.worldPosition.y, tc.worldPosition.z);
-        pos = glGetUniformLocation(program, ("pointLights[" + to_string(count) + "].color").c_str());
         PointLightComponent &pc = mWorld->getComponent<PointLightComponent>(e);
-        glUniform3f(pos, pc.color.r, pc.color.g, pc.color.b);
-        pos = glGetUniformLocation(program, ("pointLights[" + to_string(count++) + "].intensity").c_str());
-        glUniform1f(pos, pc.intensity);
+        glUniform3f(program.positionLightsPosition[count], tc.worldPosition.x, tc.worldPosition.y, tc.worldPosition.z);
+        glUniform3f(program.positionLightsColor[count], pc.color.r, pc.color.g, pc.color.b);
+        glUniform1f(program.positionLightsIntensity[count], pc.intensity);
+        count++;
     }
-    GLuint numPointLightID = glGetUniformLocation(program, "numPointLight");
-    glUniform1i(numPointLightID, count);
+    glUniform1i(program.numPointLightID, count);
 
+    glUniform1i(program.hasDirLightID, dirLightEntity);
     if (dirLightEntity != 0){
-        GLuint pos = glGetUniformLocation(program, "directionLight.direction");
         DirectionalLightComponent &dc = mWorld->getComponent<DirectionalLightComponent>(dirLightEntity);
-        glUniform3f(pos, dc.direction.x, dc.direction.y, dc.direction.z);
-        pos = glGetUniformLocation(program, "directionLight.color");
-        glUniform3f(pos, dc.color.r, dc.color.g, dc.color.b);
+        glUniform3f(program.directionLightDirectionID, dc.direction.x, dc.direction.y, dc.direction.z);
+        glUniform3f(program.directionLightColorID, dc.color.r, dc.color.g, dc.color.b);
     }
-    GLuint hasDirLightID = glGetUniformLocation(program, "hasDirLight");
-    glUniform1i(hasDirLightID, dirLightEntity);
 
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
@@ -127,12 +107,12 @@ void RenderSystem::update(float deltaTime){
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindVertexArray(loadedVAO[rc.modelFileName]);
-        glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
-        glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
-        glUniformMatrix3fv(invTID, 1, GL_FALSE, &invT[0][0]);
-        glUniform3f(materialSpecID, rc.specular.r, rc.specular.g, rc.specular.b);
-        glUniform3f(materialDiffID, rc.diffuse.r, rc.diffuse.g, rc.diffuse.b);
-        glUniform1f(materialShineID, rc.shininess);
+        glUniformMatrix4fv(program.mvpID, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(program.modelID, 1, GL_FALSE, &model[0][0]);
+        glUniformMatrix3fv(program.invTID, 1, GL_FALSE, &invT[0][0]);
+        glUniform3f(program.materialSpecID, rc.specular.r, rc.specular.g, rc.specular.b);
+        glUniform3f(program.materialDiffID, rc.diffuse.r, rc.diffuse.g, rc.diffuse.b);
+        glUniform1f(program.materialShineID, rc.shininess);
         glDrawArrays(GL_TRIANGLES, 0, loadedVertexBuffersTris[rc.modelFileName]);
     }
 }
