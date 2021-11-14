@@ -8,12 +8,8 @@
 
 class RenderSystem : public System{
     private:
-        std::unordered_map<std::string, GLuint> loadedVertexBuffers;
-        std::unordered_map<std::string, int> loadedVertexBuffersTris;
-        std::unordered_map<std::string, GLuint> loadedTexCoordBuffers;
-        std::unordered_map<std::string, GLuint> loadedNormalBuffers;
+        std::unordered_map<std::string, MeshGLData> loadedVertexBuffers;
         std::unordered_map<std::string, GLuint> loadedTextures;
-        std::unordered_map<std::string, GLuint> loadedVAO;
         Shader program;
 
         std::set<int> renderableEntities;

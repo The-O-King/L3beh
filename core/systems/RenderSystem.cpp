@@ -106,51 +106,21 @@ void RenderSystem::update(float deltaTime){
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glBindVertexArray(loadedVAO[rc.modelFileName]);
+        glBindVertexArray(loadedVertexBuffers[rc.modelFileName].VAO);
         glUniformMatrix4fv(program.mvpID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(program.modelID, 1, GL_FALSE, &model[0][0]);
         glUniformMatrix3fv(program.invTID, 1, GL_FALSE, &invT[0][0]);
         glUniform3f(program.materialSpecID, rc.specular.r, rc.specular.g, rc.specular.b);
         glUniform3f(program.materialDiffID, rc.diffuse.r, rc.diffuse.g, rc.diffuse.b);
         glUniform1f(program.materialShineID, rc.shininess);
-        glDrawArrays(GL_TRIANGLES, 0, loadedVertexBuffersTris[rc.modelFileName]);
+        glDrawElements(GL_TRIANGLES, loadedVertexBuffers[rc.modelFileName].index_count, GL_UNSIGNED_INT, 0);
     }
 }
 
 void RenderSystem::loadModel(RenderComponent& rc){
     if (loadedVertexBuffers.find(rc.modelFileName) == loadedVertexBuffers.end()){
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec2> texCoords;
-        std::vector<glm::vec3> normals;
-        loadOBJ(("graphics/" + rc.modelFileName).c_str(), vertices, texCoords, normals);
-
-        GLuint vao;
-        glGenVertexArrays(1, &vao);
-        loadedVAO[rc.modelFileName] = vao;
-        glBindVertexArray(vao);
-        
-        GLuint VBO;
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
-        loadedVertexBuffers[rc.modelFileName] = VBO;
-        loadedVertexBuffersTris[rc.modelFileName] = vertices.size();
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,0, (void*)0);
-
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * texCoords.size(), texCoords.data(), GL_STATIC_DRAW);
-        loadedTexCoordBuffers[rc.modelFileName] = VBO;
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.data(), GL_STATIC_DRAW);
-        loadedNormalBuffers[rc.modelFileName] = VBO;
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        loadedVertexBuffers[rc.modelFileName] = MeshGLData();
+        loadOBJ(("graphics/" + rc.modelFileName).c_str(), loadedVertexBuffers[rc.modelFileName]);
     }
 
     if (loadedTextures.find(rc.textureName) == loadedTextures.end()){
