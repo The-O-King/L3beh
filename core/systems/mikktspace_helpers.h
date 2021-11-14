@@ -1,7 +1,7 @@
 #ifndef MIKKTSPACE_HELPERS
 #define MIKKTSPACE_HELPERS
 
-#include "mikktspace.h"
+#include <mikktspace/mikktspace.h>
 
 
 

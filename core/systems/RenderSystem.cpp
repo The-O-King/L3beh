@@ -1,10 +1,10 @@
 #include "RenderSystem.h"
 #include "../components.h"
 #include "../world.h"
-#include "../glm/glm.hpp"
-#include "../glm/gtc/matrix_transform.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <stb_image/stb_image.h>
 
 RenderSystem::RenderSystem(World* w){
     mWorld = w;

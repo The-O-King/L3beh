@@ -1,6 +1,6 @@
 #include "ProjectileSystem.h"
 #include "CustomComponents.hpp"
-#include "core/glm/glm.hpp"
+#include <glm/glm.hpp>
 #include "core/components.h"
 #include "core/world.h"
 

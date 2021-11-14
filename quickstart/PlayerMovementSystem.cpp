@@ -1,7 +1,7 @@
 #include "PlayerMovementSystem.h"
 #include "CustomComponents.hpp"
-#include "core/glm/glm.hpp"
-#include "core/glm/gtc/matrix_transform.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "core/components.h"
 #include "core/world.h"
 #include "core/input.h"

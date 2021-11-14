@@ -18,5 +18,5 @@
             "binaryArgs": []
         }
     ],
-    "makefile.extensionOutputFolder": "./.vscode/makeoutput",
+    "makefile.extensionOutputFolder": "./build/make_output",
 }

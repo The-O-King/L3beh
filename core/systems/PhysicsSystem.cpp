@@ -1,8 +1,8 @@
 #include "PhysicsSystem.h"
 #include "../components.h"
 #include "../world.h"
-#include "../glm/gtc/matrix_transform.hpp"
-#include "../glm/gtc/quaternion.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 PhysicsSystem::PhysicsSystem(World* w){
     mWorld = w;

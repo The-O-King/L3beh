@@ -10,11 +10,11 @@ using namespace std;
 
 #include <stdlib.h>
 
-#include "../glm/glm.hpp"
+#include <glm/glm.hpp>
 
 #include "RenderSystemUtils.hpp"
 #include "mikktspace_helpers.h"
-#include "weldmesh.h"
+#include <mikktspace/weldmesh.h>
 
 // Very, VERY simple OBJ loader.
 // Here is a short list of features a real function would provide : 

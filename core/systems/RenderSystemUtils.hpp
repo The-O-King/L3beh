@@ -7,7 +7,7 @@
 #define OBJLOADER_H
 
 #include <vector>
-#include "../glm/glm.hpp"
+#include <glm/glm.hpp>
 
 #define GLEW_STATIC
 #include <GL/glew.h>

@@ -1,7 +1,7 @@
 #include "TransformSystem.h"
 #include "../components.h"
 #include "../world.h"
-#include "../glm/vec3.hpp"
+#include <glm/vec3.hpp>
 
 
 TransformSystem::TransformSystem(World* w){
