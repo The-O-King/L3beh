@@ -1,6 +1,9 @@
 #include "RenderSystem.h"
-#include "../components.h"
-#include "../world.h"
+#include <core/components/TransformComponent.h>
+#include <core/components/RenderComponent.h>
+#include <core/components/CameraComponent.h>
+#include <core/components/LightComponents.h>
+#include <core/world.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
@@ -66,8 +69,8 @@ void RenderSystem::update(float deltaTime){
         CameraComponent cc = mWorld->getComponent<CameraComponent>(e);
         if (cc.isActive){
             TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
-            cameraPos = tc.worldPosition;  
-            view = glm::inverse(getTransformation(tc));
+            cameraPos = tc.getWorldPosition(mWorld);  
+            view = glm::inverse(tc.getWorldTransformation(mWorld));
             projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 200.0f);
         }
     }
@@ -76,9 +79,9 @@ void RenderSystem::update(float deltaTime){
     glUniform3f(program.cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
     int count = 0;
     for (int e : pointLightEntities) {
-        TransformComponent &tc = mWorld->getComponent<TransformComponent>(e);
+        glm::vec3 pos = mWorld->getComponent<TransformComponent>(e).getWorldPosition(mWorld);
         PointLightComponent &pc = mWorld->getComponent<PointLightComponent>(e);
-        glUniform3f(program.positionLightsPosition[count], tc.worldPosition.x, tc.worldPosition.y, tc.worldPosition.z);
+        glUniform3f(program.positionLightsPosition[count], pos.x, pos.y, pos.z);
         glUniform3f(program.positionLightsColor[count], pc.color.r, pc.color.g, pc.color.b);
         glUniform1f(program.positionLightsIntensity[count], pc.intensity);
         count++;
@@ -96,7 +99,7 @@ void RenderSystem::update(float deltaTime){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
         
-        glm::mat4 model = getTransformation(tc);
+        glm::mat4 model = tc.getWorldTransformation(mWorld);
 
         glm::mat4 mvp = projection * view * model;
         glm::mat3 invT = glm::transpose(glm::inverse(model));

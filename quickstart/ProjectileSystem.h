@@ -1,7 +1,7 @@
 #ifndef PROJECTILESYSTEM_H
 #define PROJECTILESYSTEM_H
 
-#include "core/system.h"
+#include <core/system.h>
 #include "CustomComponents.hpp"
 
 class ProjectileSystem : public System{

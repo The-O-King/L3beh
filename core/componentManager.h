@@ -1,5 +1,5 @@
-#ifndef COMPONENT_H
-#define COMPONENT_H
+#ifndef COMPONENTMANAGER_H
+#define COMPONENTMANAGER_H
 #include <unordered_map>
 #include <vector>
 #include <bitset>

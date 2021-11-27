@@ -8,7 +8,6 @@
 
 #include "system.h"
 #include "componentManager.h"
-#include "components.h"
 #include <unordered_map>
 #include <fstream>
 #include <sstream> 

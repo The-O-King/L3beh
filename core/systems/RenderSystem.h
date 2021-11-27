@@ -1,8 +1,8 @@
 #ifndef RENDERSYSTEM_H
 #define RENDERSYSTEM_H
 
-#include "../system.h"
-#include "../components.h"
+#include <core/system.h>
+#include <core/components/RenderComponent.h>
 #include "RenderSystemUtils.hpp"
 #include <unordered_map>
 

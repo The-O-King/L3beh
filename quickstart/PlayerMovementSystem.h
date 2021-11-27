@@ -1,7 +1,7 @@
 #ifndef PLAYERMOVEMENTSYSTEM_H
 #define PLAYERMOVEMENTSYSTEM_H
 
-#include "core/system.h"
+#include <core/system.h>
 #include "CustomComponents.hpp"
 
 class PlayerMovementSystem : public System{

@@ -1,8 +1,9 @@
 #ifndef COLLISIONSYSTEMUTILS_H
 #define COLLISIONSYSTEMUTILS_H
 
-#include "../components.h"
-#include "../world.h"
+#include <core/components/PhysicsComponent.h>
+#include <core/components/TransformComponent.h>
+#include <core/world.h>
 #include <cfloat>
 
 #define PERCENT .2f
@@ -397,8 +398,8 @@ float separatingDistance(const glm::vec3& RPos, const glm::vec3& Plane, const OB
 void BoxVsBox(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, TransformComponent &tc2, ColliderComponent &cc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent bc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     BoxColliderComponent bc2 = mWorld->getComponent<BoxColliderComponent>(c2);
-    glm::mat4 orientation1 = getOrientation(tc1);
-    glm::mat4 orientation2 = getOrientation(tc2);
+    glm::mat4 orientation1 = tc1.getWorldOrientation(mWorld);
+    glm::mat4 orientation2 = tc2.getWorldOrientation(mWorld);
     OBB obb1, obb2;
     obb1.AxisX = glm::vec3(orientation1[0]);
     obb1.AxisY = glm::vec3(orientation1[1]);
@@ -409,7 +410,7 @@ void BoxVsBox(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, T
     obb2.AxisZ = glm::vec3(orientation2[2]);
     obb2.Half_size = bc2.halfSize;
 
-    glm::vec3 RPos = (tc2.worldPosition + cc2.offset) - (tc1.worldPosition + cc1.offset);
+    glm::vec3 RPos = (tc2.getWorldPosition(mWorld) + cc2.offset) - (tc1.getWorldPosition(mWorld) + cc1.offset);
     glm::vec3 facePlanes[6] = { obb1.AxisX, obb1.AxisY, obb1.AxisZ, obb2.AxisX, obb2.AxisY, obb2.AxisZ };
     glm::vec3 edgePlanes[9] = { 
         glm::normalize(glm::cross(obb1.AxisX,obb2.AxisX)), 
@@ -562,8 +563,8 @@ void BoxVsBox(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, T
 void SphereVsSphere(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, TransformComponent &tc2, ColliderComponent &cc2, collisionInfo &res, World* mWorld){
     SphereColliderComponent sc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     SphereColliderComponent sc2 = mWorld->getComponent<SphereColliderComponent>(c2);
-    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;
-    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;
+    glm::vec3 trueCenter1 = tc1.getWorldPosition(mWorld) + cc1.offset;
+    glm::vec3 trueCenter2 = tc2.getWorldPosition(mWorld) + cc2.offset;
     float totalR = sc1.radius + sc2.radius;
     float distance = glm::distance(trueCenter1, trueCenter2);
     float distBtwnObjects = distance - totalR;
@@ -582,10 +583,10 @@ void SphereVsSphere(int c1, TransformComponent &tc1, ColliderComponent &cc1, int
 void SphereVsBox(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, TransformComponent &tc2, ColliderComponent &cc2, collisionInfo &res, World* mWorld){
     SphereColliderComponent sc1 = mWorld->getComponent<SphereColliderComponent>(c1);
     BoxColliderComponent bc2 = mWorld->getComponent<BoxColliderComponent>(c2);
-    glm::vec3 trueCenter1 = tc1.worldPosition + cc1.offset;
+    glm::vec3 trueCenter1 = tc1.getWorldPosition(mWorld) + cc1.offset;
     float trueRadius = sc1.radius;
 
-    glm::mat4 boxOrientation = getOrientation(tc2);
+    glm::mat4 boxOrientation = tc2.getWorldOrientation(mWorld);
     trueCenter1 = glm::inverse(boxOrientation) * glm::vec4(trueCenter1, 1);
 
     glm::vec3 p = glm::clamp(trueCenter1, -bc2.halfSize, bc2.halfSize);
@@ -604,10 +605,10 @@ void SphereVsBox(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2
 void BoxVsSphere(int c1, TransformComponent &tc1, ColliderComponent &cc1, int c2, TransformComponent &tc2, ColliderComponent &cc2, collisionInfo &res, World* mWorld){
     BoxColliderComponent bc1 = mWorld->getComponent<BoxColliderComponent>(c1);
     SphereColliderComponent sc2 = mWorld->getComponent<SphereColliderComponent>(c2);
-    glm::vec3 trueCenter2 = tc2.worldPosition + cc2.offset;        // Sphere true position
+    glm::vec3 trueCenter2 = tc2.getWorldPosition(mWorld) + cc2.offset;        // Sphere true position
     float trueRadius = sc2.radius;
 
-    glm::mat4 boxOrientation = getOrientation(tc1);
+    glm::mat4 boxOrientation = tc1.getWorldOrientation(mWorld);
     trueCenter2 = glm::inverse(boxOrientation) * glm::vec4(trueCenter2, 1);
 
     glm::vec3 p = glm::clamp(trueCenter2, -bc1.halfSize, bc1.halfSize);

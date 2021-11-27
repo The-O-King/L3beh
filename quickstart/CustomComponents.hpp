@@ -1,7 +1,9 @@
 #ifndef CUSTOMCOMPONENT_HPP
 #define CUSTOMCOMPONENT_HPP
 
-struct PlayerMovementComponent{
+#include <core/components/Component.h>
+
+struct PlayerMovementComponent : public Component{
     float walkSpeed = 3.0f;
     float runSpeed = 5.0f;
     float jumpForce = 500.0f;
@@ -10,7 +12,7 @@ struct PlayerMovementComponent{
     int currProjectile = 0;
 };
 
-struct ProjectileComponent{
+struct ProjectileComponent : public Component{
 	float damage = 0;
 };
 

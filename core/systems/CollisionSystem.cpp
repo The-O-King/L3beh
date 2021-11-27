@@ -1,6 +1,5 @@
 #include "CollisionSystem.h"
 #include "CollisionSystemUtils.hpp"
-#include "../components.h"
 #include "../world.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -53,7 +52,7 @@ void CollisionSystem::addEntity(int entityID, componentSignature sig){
 }
 
 void CollisionSystem::update(float deltaTime){
-    vector<int> entityList(entities.begin(), entities.end());
+    std::vector<int> entityList(entities.begin(), entities.end());
     for (int x = 0; x < entityList.size(); x++){
         int entity1ID = entityList[x];
         TransformComponent &tc1 = mWorld->getComponent<TransformComponent>(entity1ID);
@@ -82,8 +81,8 @@ void CollisionSystem::update(float deltaTime){
                     res = iter->second.update(resNew);
                 }
                 
-                set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
-                set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
+                std::set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
+                std::set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
                 if (historyEnter != cc1.collisionEnter.end()){
                     cc1.collisionStay.insert(entityList[y]);
                     cc2.collisionStay.insert(entityList[x]);
@@ -104,14 +103,14 @@ void CollisionSystem::update(float deltaTime){
                 glm::mat3 invInertia1 = pc1.invInertia, invInertia2 = pc2.invInertia;
                 for (int w = 0; w < res->numContacts; w++){
                     contactPoint cp = res->points[w];
-                    res->points[w].r1 = cp.point - tc1.worldPosition;
-                    res->points[w].r2 = cp.point - tc2.worldPosition;
+                    res->points[w].r1 = cp.point - tc1.getWorldPosition(mWorld);
+                    res->points[w].r2 = cp.point - tc2.getWorldPosition(mWorld);
                     glm::vec3 crossPoint1 = glm::cross(res->points[w].r1, res->normal);
                     glm::vec3 crossPoint2 = glm::cross(res->points[w].r2, res->normal);
                     float kNormal = invMass1 + invMass2;
                     kNormal += glm::dot(crossPoint1, invInertia1 * crossPoint1) + glm::dot(crossPoint2, invInertia2 * crossPoint2);
                     res->points[w].massNormal = 1.0f / kNormal;
-                    res->points[w].bias = -PERCENT / deltaTime * max(0.0f, res->points[w].penetrationDist - THRESH);
+                    res->points[w].bias = -PERCENT / deltaTime * std::max(0.0f, res->points[w].penetrationDist - THRESH);
 
                     for (int z = 0; z < 2; z++){
                         glm::vec3 crossPoint1T = glm::cross(res->points[w].r1, res->tangent[z]);
@@ -132,9 +131,9 @@ void CollisionSystem::update(float deltaTime){
             else{
                 persistentCollisionData.erase(key);
 
-                set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
-                set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
-                set<int>::iterator historyExit = cc1.collisionExit.find(entityList[y]);
+                std::set<int>::iterator historyEnter = cc1.collisionEnter.find(entityList[y]);
+                std::set<int>::iterator historyStay = cc1.collisionStay.find(entityList[y]);
+                std::set<int>::iterator historyExit = cc1.collisionExit.find(entityList[y]);
                 if (historyEnter != cc1.collisionEnter.end()){
                     if (resNew.distBetweenObjects < .0005){
                         cc1.collisionStay.insert(entityList[y]);
@@ -180,8 +179,8 @@ void CollisionSystem::update(float deltaTime){
 
             float invMass1 = pc1.invMass, invMass2 = pc2.invMass;
             glm::mat3 invInertia1 = pc1.invInertia, invInertia2 = pc2.invInertia;
-            float e = min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
-            float mu = sqrt(pc1.friction * pc2.friction);
+            float e = std::min(pc1.restitutionCoefficient, pc2.restitutionCoefficient);
+            float mu = std::sqrt(pc1.friction * pc2.friction);
 
             for (int w = 0; w < res->numContacts; w++){
                 // Normal Impulse
@@ -190,7 +189,7 @@ void CollisionSystem::update(float deltaTime){
                 float j = (-velocityAlongNormal + res->points[w].bias) * res->points[w].massNormal;
                 
                 float temp = res->points[w].Pn;
-                res->points[w].Pn = min(temp + j, 0.0f);
+                res->points[w].Pn = std::min(temp + j, 0.0f);
                 j = res->points[w].Pn - temp;
 
                 glm::vec3 P = j * res->normal;

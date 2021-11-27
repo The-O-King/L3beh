@@ -1,15 +1,17 @@
 #include "core/runner.h"
-#include "core/components.h"
-#include "core/systems/TransformSystem.h"
 #include "core/systems/PhysicsSystem.h"
 #include "core/systems/CollisionSystem.h"
 #include "core/systems/RenderSystem.h"
+#include <core/components/TransformComponent.h>
+#include <core/components/RenderComponent.h>
+#include <core/components/PhysicsComponent.h>
+#include <core/components/LightComponents.h>
+#include <core/components/CameraComponent.h>
 #include "PlayerMovementSystem.h"
 #include "ProjectileSystem.h"
 #include "MyWorld.h"
 
 MyWorld::MyWorld(){
-    mSystems.push_back(new TransformSystem(this));
     mSystems.push_back(new RenderSystem(this));
     // Add custom Systems here
     mSystems.push_back(new PlayerMovementSystem(this));
@@ -36,11 +38,13 @@ bool MyWorld::customWorldGen(int entityID,
                              std::istringstream& data){
     if (command == "PlayerMovement"){
         PlayerMovementComponent pc;
+        pc.owner = entityID;
         data >> pc.walkSpeed >> pc.runSpeed;
         addComponentToEntity<PlayerMovementComponent>(entityID, pc);
     }
     else if (command == "Projectile"){
         ProjectileComponent pc;
+        pc.owner = entityID;
         data >> pc.damage;
         addComponentToEntity<ProjectileComponent>(entityID, pc);
     }

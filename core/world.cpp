@@ -1,5 +1,10 @@
 #include "world.h"
 #include <iostream>
+#include <core/components/TransformComponent.h>
+#include <core/components/PhysicsComponent.h>
+#include <core/components/RenderComponent.h>
+#include <core/components/LightComponents.h>
+#include <core/components/CameraComponent.h>
 
 World::World(){
     currID = 0;
@@ -27,23 +32,24 @@ int World::createEntity(std::istream& entityConfig){
             currLine >> command;
             if (command == "Transform"){
                 TransformComponent tc;
+                tc.owner = baby;
                 float parent, x, y, z, xx, yy, zz, xs, ys, zs;
                 currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
-                tc.position = glm::vec3(x, y, z);
-                tc.rotation = glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz));
-                tc.scale = glm::vec3(xs, ys, zs);
-                tc.parentEntity = parent;
-                TransformComponent& parentTransform = getComponent<TransformComponent>(parent);
-                parentTransform.childEntities.insert(baby);
+                tc.setPosition(glm::vec3(x, y, z), this);
+                tc.setRotation(glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz)), this);
+                tc.setScale(glm::vec3(xs, ys, zs), this);
+                tc.setParent(parent, this);
                 addComponentToEntity<TransformComponent>(baby, tc);
             }
             else if (command == "Render"){
                 RenderComponent rc;
+                rc.owner = baby;
                 currLine >> rc.modelFileName >> rc.textureName >> rc.diffuse.r >> rc.diffuse.g >> rc.diffuse.b >> rc.specular.r >> rc.specular.g >> rc.specular.b >> rc.shininess;
                 addComponentToEntity<RenderComponent>(baby, rc);
             }
             else if (command == "Physics"){
                 PhysicsComponent pc;
+                pc.owner = baby;
                 currLine >> pc.mass >> pc.gravityScale >> pc.restitutionCoefficient >> pc.friction >> pc.lockRotation.x >> pc.lockRotation.y >> pc.lockRotation.z >> pc.lockPosition.x >> pc.lockPosition.y >> pc.lockPosition.z;
                 pc.lockRotation.x = pc.lockRotation.x ? 0 : 1; pc.lockRotation.y = pc.lockRotation.y ? 0 : 1; pc.lockRotation.z = pc.lockRotation.z ? 0 : 1;
                 pc.lockPosition.x = pc.lockPosition.x ? 0 : 1; pc.lockPosition.y = pc.lockPosition.y ? 0 : 1; pc.lockPosition.z = pc.lockPosition.z ? 0 : 1;
@@ -54,6 +60,8 @@ int World::createEntity(std::istream& entityConfig){
             else if (command == "BoxCollider"){
                 ColliderComponent cc;
                 BoxColliderComponent bc;
+                cc.owner = baby;
+                bc.owner = baby;
                 cc.type = ColliderType::BOX;
                 currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z;
                 currLine >> bc.halfSize.x >> bc.halfSize.y >> bc.halfSize.z;
@@ -63,6 +71,8 @@ int World::createEntity(std::istream& entityConfig){
             else if (command == "SphereCollider"){
                 ColliderComponent cc;
                 SphereColliderComponent sc;
+                cc.owner = baby;
+                sc.owner = baby;
                 cc.type = ColliderType::SPHERE;
                 currLine >> cc.isTrigger >> cc.offset.x >> cc.offset.y >> cc.offset.z;
                 currLine >> sc.radius;
@@ -71,16 +81,19 @@ int World::createEntity(std::istream& entityConfig){
             }
             else if (command == "Camera"){
                 CameraComponent cc;
+                cc.owner = baby;
                 currLine >> cc.isActive >> cc.fov;
                 addComponentToEntity<CameraComponent>(baby, cc);
             }
             else if (command == "PointLight"){
                 PointLightComponent pc;
+                pc.owner = baby;
                 currLine >> pc.intensity >> pc.color.r >> pc.color.g >> pc.color.b;
                 addComponentToEntity<PointLightComponent>(baby, pc);
             }
             else if (command == "DirectionalLight"){
                 DirectionalLightComponent dc;
+                dc.owner = baby;
                 currLine >> dc.color.r >> dc.color.g >> dc.color.b >> dc.direction.x >> dc.direction.y >> dc.direction.z;
                 addComponentToEntity<DirectionalLightComponent>(baby, dc);
             }            
@@ -127,14 +140,14 @@ int World::createEntity(){
 
 void World::destroyEntities(){
     for (int entityID : entitiesToDestroy){
-        vector<int> destroyList;
+        std::vector<int> destroyList;
         destroyList.push_back(entityID);
-        int parentID = getComponent<TransformComponent>(entityID).parentEntity;
+        int parentID = getComponent<TransformComponent>(entityID).getParentEntity();
         TransformComponent& parentTC = getComponent<TransformComponent>(parentID);
-        parentTC.childEntities.erase(entityID);
+        parentTC.removeChildEntity(entityID);
         while (!destroyList.empty()){
             int currDestroy = destroyList.back(); destroyList.pop_back();
-            set<int> toAdd = getComponent<TransformComponent>(currDestroy).childEntities;
+            std::set<int> toAdd = getComponent<TransformComponent>(currDestroy).getChildEntities();
             destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
 
             componentSignature toDestroy = liveEntities[currDestroy];
