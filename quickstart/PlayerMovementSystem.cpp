@@ -12,7 +12,7 @@ std::string testEntity[] = {
     "Physics 1 1 1 .5     0 0 0   0 0 0\n"
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "SphereCollider 0    0 0 0   1\n"
-    "Render cSphere.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "Render core/assets/sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32\n"
     "Projectile 1\n"
     "/Entity\n",
     
@@ -20,7 +20,7 @@ std::string testEntity[] = {
     "Physics 1 1 1 .5     0 0 0   0 0 0\n"
     "Transform 0    0 0 -10    0 0 0  1 1 1\n"
     "BoxCollider 0      0 0 0    .5 .5 .5\n"
-    "Render cube.obj cube.jpg  1 1 1 1 1 1 32\n"
+    "Render core/assets/cube.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32\n"
     "Projectile 0\n"
     "/Entity\n"
 };

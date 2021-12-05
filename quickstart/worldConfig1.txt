@@ -20,56 +20,56 @@ Entity cube
 Transform 0    0 0 -6    0 0 20  2 2 2
 Physics 1 1 1 .5   0 0 0   0 0 0
 BoxCollider 0     0 0 0    1 1 1
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    0.1 0 -10.1   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    -0.1 2.1 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    0.3 -2 -10   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    -.5 0 -12.5   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    0 0 -8.3   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    -4 0 -8   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity PhysicsBall
 Physics 1 1 1 .5   0 0 0   0 0 0
 SphereCollider 0   0 0 0    1
 Transform 0    4 0 -8.3   0 0 0  1 1 1
-Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 /Entity PlayerBall
@@ -77,47 +77,47 @@ Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
 /Physics 1 0 1 1 .5
 /Collider 0 0 0 0 0 0 0 1
 /Transform 0    0 0 -10   0 0 0  1 1 1
-/Render cSphere.obj cube.jpg  1 1 1 1 1 1 32
+/Render sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32
 /Entity
 
 Entity Floor
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0    0 0 0   5 .5 5
 Transform 0    0 -5 -10   0 0 0  10 1 10
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity Ceiling
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0    0 0 0   5 .5 5
 Transform 0    0 5 -10   0 0 0  10 1 10
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallLeft
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0    0 0 0   .5 5 5
 Transform 0    -5 -1 -10   0 0 0  1 10 10
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallRight
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0     0 0 0   .5 5 5
 Transform 0    5 -1 -10   0 0 0  1 10 10
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallBack
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0     0 0 0   5 5 .5
 Transform 0    0 -1 -15   0 0 0  10 10 1
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity
 
 Entity WallFront
 Physics 0 0 1 .2   0 0 0   0 0 0
 BoxCollider 0     0 0 0   5 5 .5
 Transform 0    0 -1 -5   0 0 0  10 10 1
-//Render cube.obj cube.jpg 1 1 1 1 1 1 2
+//Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity

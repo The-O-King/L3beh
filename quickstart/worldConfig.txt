@@ -15,5 +15,5 @@ Entity Floor
 Physics 0 0 1 .2   0 0 0  0 0 0
 BoxCollider 0    0 0 0   5 .5 5
 Transform 0    0 -1.5 0   0 0 0  10 1 10
-Render cube.obj cube.jpg 1 1 1 1 1 1 2
+Render core/assets/cube.obj core/assets/wood_albedo.jpg 1 1 1 1 1 1 2
 /Entity

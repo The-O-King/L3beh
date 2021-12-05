@@ -36,7 +36,7 @@ void RenderSystem::init(){
     glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glClearColor(.2f, .5f, .3f, 1.0);
-    program = Shader("graphics/cube.vert", "graphics/cube.frag");
+    program = Shader("core/assets/scene.vert", "core/assets/scene.frag");
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
@@ -123,7 +123,7 @@ void RenderSystem::update(float deltaTime){
 void RenderSystem::loadModel(RenderComponent& rc){
     if (loadedVertexBuffers.find(rc.modelFileName) == loadedVertexBuffers.end()){
         loadedVertexBuffers[rc.modelFileName] = MeshGLData();
-        loadOBJ(("graphics/" + rc.modelFileName).c_str(), loadedVertexBuffers[rc.modelFileName]);
+        loadOBJ((rc.modelFileName).c_str(), loadedVertexBuffers[rc.modelFileName]);
     }
 
     if (loadedTextures.find(rc.textureName) == loadedTextures.end()){
@@ -131,7 +131,7 @@ void RenderSystem::loadModel(RenderComponent& rc){
         glGenTextures(1, &texID);
         glBindTexture(GL_TEXTURE_2D, texID);
         int w, h, channels;
-        unsigned char *data = stbi_load(("graphics/" + rc.textureName).c_str(), &w, &h, &channels, 0);
+        unsigned char *data = stbi_load((rc.textureName).c_str(), &w, &h, &channels, 0);
         if (data){
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
