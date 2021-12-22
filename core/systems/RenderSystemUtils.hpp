@@ -14,7 +14,7 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
-#define MAX_LIGHTS 100
+#define MAX_LIGHTS 10
 
 struct MeshGLData {
     GLuint vertex_buffer;
