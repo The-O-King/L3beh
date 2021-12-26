@@ -1,7 +1,7 @@
 CC := g++ 
 CFLAGS := -std=c++17 -Wall -g 
 INCLUDE := -I. -I./third_party
-LINK := -lglew32 -lopengl32 -lglfw3  -lglfw3dll
+LINK := -lglew32 -lopengl32 -lglfw3dll
 TARGET := build/bin/output
 
 # $(wildcard *.cpp /xxx/xxx/*.cpp): get all .cpp files from the current directory and dir "/xxx/xxx/"
