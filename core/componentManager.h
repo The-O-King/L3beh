@@ -2,6 +2,7 @@
 #define COMPONENTMANAGER_H
 #include <unordered_map>
 #include <vector>
+#include <stack>
 #include <bitset>
 #include <any>
 
@@ -33,17 +34,28 @@ class ComponentList : public ComponentListInterface {
     private:
         std::vector<T> data;
         std::unordered_map<int, int> entityToIndex;
+        std::stack<int> freeIndices;
 
     public:
         ComponentList() { data.reserve(200); }
 
         bool addComponent(int entity, std::any initialComp) {
-            if (entityToIndex.find(entity) == entityToIndex.end()){
-                data.push_back(std::any_cast<T>(initialComp));
-                entityToIndex[entity] = data.size() - 1;
-                return true;
+            if (entityToIndex.find(entity) != entityToIndex.end()){
+                return false;
             }
-            return false;
+
+            int index = -1;
+            if (!freeIndices.empty()) {
+                index = freeIndices.top(); freeIndices.pop();
+                data[index] = std::any_cast<T>(initialComp);
+            }
+            else {
+                data.push_back(std::any_cast<T>(initialComp));
+                index = data.size() - 1;
+            }
+
+            entityToIndex[entity] = index;
+            return true;
         }
 
         bool addComponent(int entity) {
@@ -59,17 +71,13 @@ class ComponentList : public ComponentListInterface {
         }
 
         bool removeComponent(int entity) {
-            if (entityToIndex.find(entity) != entityToIndex.end()){
-                int entityIndex = entityToIndex[entity];
-                for(auto& p : entityToIndex) {
-                    if (p.second > entityIndex)
-                        p.second--;
-                }
-                entityToIndex.erase(entity);
-                data.erase(data.begin() + entityIndex);
-                return true;
+            if (entityToIndex.find(entity) == entityToIndex.end()){
+                return false;
             }
-            return false;
+            
+            freeIndices.push(entityToIndex[entity]);
+            entityToIndex.erase(entity);
+            return true;
         }
 
         std::any getComponent(int entity) {
