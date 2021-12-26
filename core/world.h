@@ -44,6 +44,9 @@ class World{
         T& getComponent(int entityID);
         template <class T>
         bool setComponent(int entityID, T comp);
+        template <class T>
+        bool has(int entityID);
+        componentSignature getComponentSignature(int entity);
 };
 
 
@@ -108,6 +111,11 @@ T& World::getComponent(int entityID){
 template <class T>
 bool World::setComponent(int entityID, T comp){
     return mComponents.setComponent<T>(entityID, comp);
+}
+
+template <class T>
+bool World::has(int entityID) {
+    return liveEntities[entityID][type_id<T>()];
 }
 
 #endif

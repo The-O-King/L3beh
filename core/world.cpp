@@ -165,3 +165,7 @@ void World::destroyEntity(int entityID){
     if (liveEntities.find(entityID) != liveEntities.end())
         entitiesToDestroy.insert(entityID);
 }
+
+componentSignature World::getComponentSignature(int entity) {
+    return liveEntities[entity];
+}
