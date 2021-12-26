@@ -9,6 +9,8 @@ class World;
 class System{
     protected:
         World *mWorld;
+        // Treat this as saying "this system requires entities to have AT LEAST 
+        // one of these sets of components to be considered part of this system"
         std::vector<componentSignature> neededComponentSignatures;
         std::set<int> entities;
     

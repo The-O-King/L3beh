@@ -59,7 +59,7 @@ void World::addComponentToEntity(int entityID){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
         for (componentSignature sig : currSigs){
             if ((sig & liveEntities[entityID]) == sig){
-                s->addEntity(entityID, sig);
+                s->addEntity(entityID, liveEntities[entityID]);
                 break;
             }
         }
@@ -76,7 +76,7 @@ void World::addComponentToEntity(int entityID, T componentData){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
         for (componentSignature sig : currSigs){
             if ((sig & liveEntities[entityID]) == sig){
-                s->addEntity(entityID, sig);
+                s->addEntity(entityID, liveEntities[entityID]);
                 break;
             }
         }

@@ -32,7 +32,7 @@ void CollisionSystem::init(){
 void CollisionSystem::addEntity(int entityID, componentSignature sig){
     entities.emplace(entityID);
     // Box Collider
-    if ((sig & neededComponentSignatures[0]) == sig){
+    if ((sig & neededComponentSignatures[0]) == neededComponentSignatures[0]){
         PhysicsComponent &pc1 = mWorld->getComponent<PhysicsComponent>(entityID);
         BoxColliderComponent &bc1 = mWorld->getComponent<BoxColliderComponent>(entityID);
         float constFactor = pc1.invMass * 12.0;

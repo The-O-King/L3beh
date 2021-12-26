@@ -40,15 +40,15 @@ void RenderSystem::init(){
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
-    if (sig == neededComponentSignatures[0]){
+    if ((sig & neededComponentSignatures[0]) == neededComponentSignatures[0]){
         renderableEntities.insert(entityID);
         loadModel(mWorld->getComponent<RenderComponent>(entityID));
     }
-    else if (sig == neededComponentSignatures[1])
+    else if ((sig & neededComponentSignatures[1]) == neededComponentSignatures[1])
         cameraEntities.insert(entityID);
-    else if (sig == neededComponentSignatures[2])
+    else if ((sig & neededComponentSignatures[2]) == neededComponentSignatures[2])
         pointLightEntities.insert(entityID);
-    else if (sig == neededComponentSignatures[3])
+    else if ((sig & neededComponentSignatures[3]) == neededComponentSignatures[3])
         dirLightEntity = entityID;
 }
 
