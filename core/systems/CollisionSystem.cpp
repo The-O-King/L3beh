@@ -51,6 +51,18 @@ void CollisionSystem::addEntity(int entityID, componentSignature sig){
     }
 }
 
+void CollisionSystem::removeEntity(int entityID) {
+    for (auto it = persistentCollisionData.cbegin(); it != persistentCollisionData.cend(); ){
+        if (it->first.entity1 == entityID || it->first.entity2 == entityID) {
+            it = persistentCollisionData.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+    entities.erase(entityID);
+}
+
 void CollisionSystem::update(float deltaTime){
     std::vector<int> entityList(entities.begin(), entities.end());
     for (int x = 0; x < entityList.size(); x++){

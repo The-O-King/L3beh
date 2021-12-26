@@ -15,6 +15,7 @@ class CollisionSystem : public System{
         void init() override;
         void update(float deltaTime) override;
         void addEntity(int entityID, componentSignature sig) override;
+        void removeEntity(int entityID) override;
 };
 
 #endif
