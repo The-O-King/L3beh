@@ -23,9 +23,9 @@ void PhysicsSystem::update(float deltaTime){
         PhysicsComponent& phys = mWorld->getComponent<PhysicsComponent>(e);
         glm::vec3 last_accel = phys.acceleration;
         glm::vec3 last_accel_angular = phys.angularAcceleration;
-        tc.translate((phys.velocity * deltaTime + (.5f * last_accel * deltaTime * deltaTime)) * phys.lockPosition, mWorld);
+        tc.position += (phys.velocity * deltaTime + (.5f * last_accel * deltaTime * deltaTime)) * phys.lockPosition;
         glm::vec3 integrateAngVel = (phys.angularVelocity + (last_accel_angular * deltaTime)) * phys.lockRotation;
-        tc.setRotation(glm::normalize(tc.getWorldRotationQuat(mWorld) + (.5f * glm::quat(0.0f, integrateAngVel) * tc.getWorldRotationQuat(mWorld) * deltaTime)), mWorld);
+        tc.rotation = glm::normalize(tc.rotation + (.5f * glm::quat(0.0f, integrateAngVel) * tc.rotation * deltaTime));
 
         phys.sumForces += phys.mass * phys.gravityScale * glm::vec3(0, -9.8, 0);
         glm::vec3 new_accel = phys.sumForces * phys.invMass;
@@ -34,7 +34,7 @@ void PhysicsSystem::update(float deltaTime){
         phys.acceleration = new_accel;
         
         glm::mat3 invInertia = phys.invInertia;
-        invInertia = tc.getWorldRotationMat(mWorld) * invInertia * glm::transpose(tc.getWorldRotationMat(mWorld));
+        invInertia = tc.getRotationMat() * invInertia * glm::transpose(tc.getRotationMat());
         glm::vec3 new_accel_angular = invInertia * phys.sumTorques;
         glm::vec3 avg_accel_angular = (last_accel_angular + new_accel_angular) * 0.5f;
         phys.angularVelocity += avg_accel_angular * deltaTime;

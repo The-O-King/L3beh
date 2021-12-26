@@ -1,6 +1,9 @@
 #include "world.h"
 #include <iostream>
+#include <core/components/HierarchyParentComponent.h>
+#include <core/components/HierarchyChildrenComponent.h>
 #include <core/components/TransformComponent.h>
+#include <core/components/TransformGlobalComponent.h>
 #include <core/components/PhysicsComponent.h>
 #include <core/components/RenderComponent.h>
 #include <core/components/LightComponents.h>
@@ -32,14 +35,22 @@ int World::createEntity(std::istream& entityConfig){
             currLine >> command;
             if (command == "Transform"){
                 TransformComponent tc;
+                TransformGlobalComponent tgc;
                 tc.owner = baby;
-                float parent, x, y, z, xx, yy, zz, xs, ys, zs;
-                currLine >> parent >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
-                tc.setPosition(glm::vec3(x, y, z), this);
-                tc.setRotation(glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz)), this);
-                tc.setScale(glm::vec3(xs, ys, zs), this);
-                tc.setParent(parent, this);
+                tgc.owner = baby;
+                float x, y, z, xx, yy, zz, xs, ys, zs;
+                currLine >> x >> y >> z >> xx >> yy >> zz >> xs >> ys >> zs;
+                tc.position = glm::vec3(x, y, z);
+                tc.rotation = glm::vec3(glm::radians(xx), glm::radians(yy), glm::radians(zz));
+                tc.scale = glm::vec3(xs, ys, zs);
                 addComponentToEntity<TransformComponent>(baby, tc);
+                addComponentToEntity<TransformGlobalComponent>(baby, tgc);
+            }
+            if (command == "Parent"){
+                HierarchyParentComponent hc;
+                hc.owner = baby;
+                currLine >> hc.parent;
+                addComponentToEntity<HierarchyParentComponent>(baby, hc);
             }
             else if (command == "Render"){
                 RenderComponent rc;
@@ -112,10 +123,6 @@ int World::createEntity(std::string entityConfig){
 }
 
 bool World::baseWorldGen(std::string worldConfigFile){
-    int worldRoot = createEntity();
-    TransformComponent worldRootTC;
-    addComponentToEntity<TransformComponent>(worldRoot, worldRootTC);
-
     std::ifstream inputFile;
     inputFile.open(worldConfigFile, std::ifstream::in);
     if (!inputFile.is_open())
@@ -142,13 +149,18 @@ void World::destroyEntities(){
     for (int entityID : entitiesToDestroy){
         std::vector<int> destroyList;
         destroyList.push_back(entityID);
-        int parentID = getComponent<TransformComponent>(entityID).getParentEntity();
-        TransformComponent& parentTC = getComponent<TransformComponent>(parentID);
-        parentTC.removeChildEntity(entityID);
+        if (has<HierarchyParentComponent>(entityID)) {
+            int parent = getComponent<HierarchyParentComponent>(entityID).parent;
+            HierarchyChildrenComponent& parentHC = getComponent<HierarchyChildrenComponent>(parent);
+            parentHC.children.erase(entityID);
+        }
+
         while (!destroyList.empty()){
             int currDestroy = destroyList.back(); destroyList.pop_back();
-            std::set<int> toAdd = getComponent<TransformComponent>(currDestroy).getChildEntities();
-            destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
+            if (has<HierarchyChildrenComponent>(entityID)){
+                std::set<int> toAdd = getComponent<HierarchyChildrenComponent>(currDestroy).children;
+                destroyList.insert(destroyList.end(), toAdd.begin(), toAdd.end());
+            }
 
             componentSignature toDestroy = liveEntities[currDestroy];
             for (System* s : mSystems){

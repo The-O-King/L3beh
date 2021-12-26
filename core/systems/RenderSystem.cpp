@@ -1,5 +1,5 @@
 #include "RenderSystem.h"
-#include <core/components/TransformComponent.h>
+#include <core/components/TransformGlobalComponent.h>
 #include <core/components/RenderComponent.h>
 #include <core/components/CameraComponent.h>
 #include <core/components/LightComponents.h>
@@ -12,18 +12,18 @@
 RenderSystem::RenderSystem(World* w){
     mWorld = w;
     componentSignature objRenderer;
-    objRenderer[type_id<TransformComponent>()] = 1;
+    objRenderer[type_id<TransformGlobalComponent>()] = 1;
     objRenderer[type_id<RenderComponent>()] = 1;
     neededComponentSignatures.push_back(objRenderer);
 
     componentSignature cameras;
-    cameras[type_id<TransformComponent>()] = 1;
+    cameras[type_id<TransformGlobalComponent>()] = 1;
     cameras[type_id<CameraComponent>()] = 1;
     neededComponentSignatures.push_back(cameras);
 
     componentSignature pointLightEntities;
     pointLightEntities[type_id<PointLightComponent>()] = 1;
-    pointLightEntities[type_id<TransformComponent>()] = 1;
+    pointLightEntities[type_id<TransformGlobalComponent>()] = 1;
     neededComponentSignatures.push_back(pointLightEntities);
 
 
@@ -68,9 +68,9 @@ void RenderSystem::update(float deltaTime){
     for (int e : cameraEntities){
         CameraComponent cc = mWorld->getComponent<CameraComponent>(e);
         if (cc.isActive){
-            TransformComponent tc = mWorld->getComponent<TransformComponent>(e);
-            cameraPos = tc.getWorldPosition(mWorld);  
-            view = glm::inverse(tc.getWorldTransformation(mWorld));
+            TransformGlobalComponent tc = mWorld->getComponent<TransformGlobalComponent>(e);
+            cameraPos = tc.getPosition();  
+            view = glm::inverse(tc.getTransformation());
             projection = glm::perspective(glm::radians(cc.fov), (float)1280 / (float)720, 0.1f, 200.0f);
         }
     }
@@ -79,7 +79,7 @@ void RenderSystem::update(float deltaTime){
     glUniform3f(program.cameraPosID, cameraPos.x, cameraPos.y, cameraPos.z);
     int count = 0;
     for (int e : pointLightEntities) {
-        glm::vec3 pos = mWorld->getComponent<TransformComponent>(e).getWorldPosition(mWorld);
+        glm::vec3 pos = mWorld->getComponent<TransformGlobalComponent>(e).getPosition();
         PointLightComponent &pc = mWorld->getComponent<PointLightComponent>(e);
         glUniform3f(program.positionLightsPosition[count], pos.x, pos.y, pos.z);
         glUniform3f(program.positionLightsColor[count], pc.color.r, pc.color.g, pc.color.b);
@@ -97,9 +97,9 @@ void RenderSystem::update(float deltaTime){
 
     for (int e : renderableEntities){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
-        TransformComponent& tc = mWorld->getComponent<TransformComponent>(e);
+        TransformGlobalComponent& tc = mWorld->getComponent<TransformGlobalComponent>(e);
         
-        glm::mat4 model = tc.getWorldTransformation(mWorld);
+        glm::mat4 model = tc.getTransformation();
 
         glm::mat4 mvp = projection * view * model;
         glm::mat3 invT = glm::transpose(glm::inverse(model));

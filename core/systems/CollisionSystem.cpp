@@ -13,13 +13,13 @@ collisionFunction collisionTestTable[2][2] = {
 CollisionSystem::CollisionSystem(World* w){
     mWorld = w;
     componentSignature box;
-    box[type_id<TransformComponent>()] = 1;
+    box[type_id<TransformGlobalComponent>()] = 1;
     box[type_id<BoxColliderComponent>()] = 1;
     box[type_id<PhysicsComponent>()] = 1;
     neededComponentSignatures.push_back(box);
 
     componentSignature sphere;
-    sphere[type_id<TransformComponent>()] = 1;
+    sphere[type_id<TransformGlobalComponent>()] = 1;
     sphere[type_id<SphereColliderComponent>()] = 1;
     sphere[type_id<PhysicsComponent>()] = 1;
     neededComponentSignatures.push_back(sphere);
@@ -67,12 +67,12 @@ void CollisionSystem::update(float deltaTime){
     std::vector<int> entityList(entities.begin(), entities.end());
     for (int x = 0; x < entityList.size(); x++){
         int entity1ID = entityList[x];
-        TransformComponent &tc1 = mWorld->getComponent<TransformComponent>(entity1ID);
+        TransformGlobalComponent &tc1 = mWorld->getComponent<TransformGlobalComponent>(entity1ID);
         ColliderComponent &cc1 = mWorld->getComponent<ColliderComponent>(entity1ID);
         PhysicsComponent &pc1 = mWorld->getComponent<PhysicsComponent>(entity1ID);
         for (int y = x+1; y < entityList.size(); y++){
             int entity2ID = entityList[y];
-            TransformComponent &tc2 = mWorld->getComponent<TransformComponent>(entity2ID);
+            TransformGlobalComponent &tc2 = mWorld->getComponent<TransformGlobalComponent>(entity2ID);
             ColliderComponent &cc2 = mWorld->getComponent<ColliderComponent>(entity2ID);
             PhysicsComponent &pc2 = mWorld->getComponent<PhysicsComponent>(entity2ID);
             if (pc1.mass == 0 && pc2.mass == 0)
@@ -115,8 +115,8 @@ void CollisionSystem::update(float deltaTime){
                 glm::mat3 invInertia1 = pc1.invInertia, invInertia2 = pc2.invInertia;
                 for (int w = 0; w < res->numContacts; w++){
                     contactPoint cp = res->points[w];
-                    res->points[w].r1 = cp.point - tc1.getWorldPosition(mWorld);
-                    res->points[w].r2 = cp.point - tc2.getWorldPosition(mWorld);
+                    res->points[w].r1 = cp.point - tc1.getPosition();
+                    res->points[w].r2 = cp.point - tc2.getPosition();
                     glm::vec3 crossPoint1 = glm::cross(res->points[w].r1, res->normal);
                     glm::vec3 crossPoint2 = glm::cross(res->points[w].r2, res->normal);
                     float kNormal = invMass1 + invMass2;
