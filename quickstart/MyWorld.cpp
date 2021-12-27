@@ -26,37 +26,33 @@ MyWorld::MyWorld(){
     mSystems.push_back(new CollisionSystem(this));
     mSystems.push_back(new PhysicsSystem(this));
     mSystems.push_back(new RenderSystem(this));
-    mComponents.registerComponent<HierarchyParentComponent>();
-    mComponents.registerComponent<HierarchyChildrenComponent>();
-    mComponents.registerComponent<TransformComponent>();
-    mComponents.registerComponent<TransformGlobalComponent>();
-    mComponents.registerComponent<RenderComponent>();
-    mComponents.registerComponent<PhysicsComponent>();
-    mComponents.registerComponent<ColliderComponent>();
-    mComponents.registerComponent<BoxColliderComponent>();
-    mComponents.registerComponent<SphereColliderComponent>();
-    mComponents.registerComponent<CameraComponent>();
-    mComponents.registerComponent<PointLightComponent>();
-    mComponents.registerComponent<DirectionalLightComponent>();
+    registerComponent<HierarchyParentComponent>();
+    registerComponent<HierarchyChildrenComponent>();
+    registerComponent<TransformComponent>();
+    registerComponent<TransformGlobalComponent>();
+    registerComponent<RenderComponent>();
+    registerComponent<PhysicsComponent>();
+    registerComponent<ColliderComponent>();
+    registerComponent<BoxColliderComponent>();
+    registerComponent<SphereColliderComponent>();
+    registerComponent<CameraComponent>();
+    registerComponent<PointLightComponent>();
+    registerComponent<DirectionalLightComponent>();
     // Register Custom components here
-    mComponents.registerComponent<PlayerMovementComponent>();
-    mComponents.registerComponent<ProjectileComponent>();    
+    registerComponent<PlayerMovementComponent>();
+    registerComponent<ProjectileComponent>();    
 }
 
 bool MyWorld::customWorldGen(int entityID, 
                              std::string command, 
                              std::istringstream& data){
     if (command == "PlayerMovement"){
-        PlayerMovementComponent pc;
-        pc.owner = entityID;
+        PlayerMovementComponent& pc = addComponent<PlayerMovementComponent>(entityID);
         data >> pc.walkSpeed >> pc.runSpeed;
-        addComponentToEntity<PlayerMovementComponent>(entityID, pc);
     }
     else if (command == "Projectile"){
-        ProjectileComponent pc;
-        pc.owner = entityID;
+        ProjectileComponent& pc = addComponent<ProjectileComponent>(entityID);
         data >> pc.damage;
-        addComponentToEntity<ProjectileComponent>(entityID, pc);
     }
     return true;
 }

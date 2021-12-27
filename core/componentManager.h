@@ -1,10 +1,12 @@
 #ifndef COMPONENTMANAGER_H
 #define COMPONENTMANAGER_H
+#include <core/components/Component.h>
 #include <unordered_map>
 #include <vector>
 #include <stack>
 #include <bitset>
 #include <any>
+#include <stdexcept>
 
 #define MAX_COMPONENT 100
 typedef std::bitset<MAX_COMPONENT> componentSignature;
@@ -22,15 +24,15 @@ int type_id() {
 
 class ComponentListInterface {
     public:
-        virtual bool addComponent(int entity) = 0;
-        virtual bool addComponent(int entity, std::any initialComp) = 0;
-        virtual bool setComponent(int entity, std::any initialComp) = 0;
-        virtual bool removeComponent(int entity) = 0;
+        virtual std::any addComponent(int entity) = 0;
+        virtual void removeComponent(int entity) = 0;
         virtual std::any getComponent(int entity) = 0;
 };
 
 template<class T> 
 class ComponentList : public ComponentListInterface {
+static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+
     private:
         std::vector<T> data;
         std::unordered_map<int, int> entityToIndex;
@@ -39,109 +41,37 @@ class ComponentList : public ComponentListInterface {
     public:
         ComponentList() { data.reserve(200); }
 
-        bool addComponent(int entity, std::any initialComp) {
+        std::any addComponent(int entity) {
             if (entityToIndex.find(entity) != entityToIndex.end()){
-                return false;
+                throw std::runtime_error("Entity " + std::to_string(entity) + " already has Component " + std::to_string(type_id<T>()));
             }
 
             int index = -1;
             if (!freeIndices.empty()) {
                 index = freeIndices.top(); freeIndices.pop();
-                data[index] = std::any_cast<T>(initialComp);
+                data[index] = T();
             }
             else {
-                data.push_back(std::any_cast<T>(initialComp));
+                data.emplace_back();
                 index = data.size() - 1;
             }
-
+            data[index].owner = entity;
             entityToIndex[entity] = index;
-            return true;
+            return &data[index];
         }
 
-        bool addComponent(int entity) {
-            return addComponent(entity, T());
-        }
-
-        bool setComponent(int entity, std::any initialComp) {
-            if (entityToIndex.find(entity) != entityToIndex.end()){
-                data[entityToIndex[entity]] = std::any_cast<T>(initialComp);
-                return true;
-            }
-            return false;
-        }
-
-        bool removeComponent(int entity) {
+        void removeComponent(int entity) {
             if (entityToIndex.find(entity) == entityToIndex.end()){
-                return false;
+                throw std::runtime_error("Entity " + std::to_string(entity) + " does not have Component " + std::to_string(type_id<T>()));
             }
             
             freeIndices.push(entityToIndex[entity]);
             entityToIndex.erase(entity);
-            return true;
         }
 
         std::any getComponent(int entity) {
             return &data[entityToIndex[entity]];
         }
 };
-
-class ComponentManager{
-    private:
-        std::vector<ComponentListInterface*> componentHolder;
-
-    public:
-        ComponentManager();
-        bool destroyEntity(int entityID, componentSignature toDestroy);
-
-        template <class T>
-        int registerComponent();
-        template <class T>
-        bool addComponent(int entity);
-        template <class T>
-        bool addComponent(int entity, T initialComp);
-        template <class T>
-        bool setComponent(int entityID, T initialComp);
-        template <class T>
-        bool removeComponent(int entity);
-        template <class T>
-        T* getComponent(int entity);
-};
-
-template <class T>
-bool ComponentManager::addComponent(int entityID){
-    int compID = type_id<T>();
-    return componentHolder[compID]->addComponent(entityID);
-}
-
-template <class T>
-bool ComponentManager::addComponent(int entityID, T initialComp){
-    int compID = type_id<T>();
-    return componentHolder[compID]->addComponent(entityID, initialComp);
-}
-
-template <class T>
-bool ComponentManager::setComponent(int entityID, T initialComp){
-    int compID = type_id<T>();
-    return componentHolder[compID]->addComponent(entityID, initialComp);
-}
-
-template <class T>
-bool ComponentManager::removeComponent(int entityID){
-    int compID = type_id<T>();
-    return componentHolder[compID]->removeComponent(entityID);
-}
-
-template <class T>
-T* ComponentManager::getComponent(int entityID){
-    int compID = type_id<T>();
-    return std::any_cast<T*>(componentHolder[compID]->getComponent(entityID));
-}
-
-template <class T>
-int ComponentManager::registerComponent(){
-    int compID = type_id<T>();
-    componentHolder[compID] = new ComponentList<T>;
-    return compID;
-}
 
 #endif

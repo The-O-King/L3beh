@@ -19,7 +19,7 @@ class World{
         int currID;
         GLFWwindow* mWindow;
         std::vector<System*> mSystems;
-        ComponentManager mComponents;
+        std::vector<ComponentListInterface*> mComponents;
         std::unordered_map<int, componentSignature> liveEntities;
         std::set<int> entitiesToDestroy;
         
@@ -35,17 +35,20 @@ class World{
         std::vector<System*>& getSystems();
 
         template <class T>
-        void addComponentToEntity(int entityID);
+        int registerComponent();
+
         template <class T>
-        void addComponentToEntity(int entityID, T Component);
+        T& addComponent(int entityID);
+
         template <class T>
-        void removeComponentFromEntity(int entityID);
+        void removeComponent(int entityID);
+        
         template <class T>
         T& getComponent(int entityID);
-        template <class T>
-        bool setComponent(int entityID, T comp);
+        
         template <class T>
         bool has(int entityID);
+
         componentSignature getComponentSignature(int entity);
 };
 
@@ -53,10 +56,10 @@ class World{
 
 
 template <class T>
-void World::addComponentToEntity(int entityID){
+T& World::addComponent(int entityID){
     int ID = type_id<T>();
     liveEntities[entityID].flip(ID);
-    mComponents.addComponent<T>(entityID);
+    T* newComponent = std::any_cast<T*>(mComponents[ID]->addComponent(entityID));
 
     for (System* s : mSystems){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
@@ -67,30 +70,15 @@ void World::addComponentToEntity(int entityID){
             }
         }
     }
+
+    return *newComponent;
 }
 
 template <class T>
-void World::addComponentToEntity(int entityID, T componentData){
-    int ID = type_id<T>();
-    liveEntities[entityID].flip(ID);
-    mComponents.addComponent<T>(entityID, componentData);
-
-    for (System* s : mSystems){
-        std::vector<componentSignature> currSigs = s->getNeededComponents();
-        for (componentSignature sig : currSigs){
-            if ((sig & liveEntities[entityID]) == sig){
-                s->addEntity(entityID, liveEntities[entityID]);
-                break;
-            }
-        }
-    }
-}
-
-template <class T>
-void World::removeComponentFromEntity(int entityID){
+void World::removeComponent(int entityID){
     int ID = type_id<T>();
     liveEntities[entityID].reset(ID);
-    mComponents.removeComponent<T>(entityID);
+    mComponents[ID]->removeComponent(entityID);
 
     for (System* s : mSystems){
         std::vector<componentSignature> currSigs = s->getNeededComponents();
@@ -105,17 +93,19 @@ void World::removeComponentFromEntity(int entityID){
 
 template <class T>
 T& World::getComponent(int entityID){
-    return *mComponents.getComponent<T>(entityID);
-}
-
-template <class T>
-bool World::setComponent(int entityID, T comp){
-    return mComponents.setComponent<T>(entityID, comp);
+    return *std::any_cast<T*>(mComponents[type_id<T>()]->getComponent(entityID));
 }
 
 template <class T>
 bool World::has(int entityID) {
     return liveEntities[entityID][type_id<T>()];
+}
+
+template <class T>
+int World::registerComponent() {
+    int compID = type_id<T>();
+    mComponents[compID] = new ComponentList<T>;
+    return compID;
 }
 
 #endif

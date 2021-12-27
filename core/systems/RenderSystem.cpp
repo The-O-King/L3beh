@@ -40,10 +40,8 @@ void RenderSystem::init(){
 }
 
 void RenderSystem::addEntity(int entityID, componentSignature sig){
-    if ((sig & neededComponentSignatures[0]) == neededComponentSignatures[0]){
+    if ((sig & neededComponentSignatures[0]) == neededComponentSignatures[0])
         renderableEntities.insert(entityID);
-        loadModel(mWorld->getComponent<RenderComponent>(entityID));
-    }
     else if ((sig & neededComponentSignatures[1]) == neededComponentSignatures[1])
         cameraEntities.insert(entityID);
     else if ((sig & neededComponentSignatures[2]) == neededComponentSignatures[2])
@@ -99,6 +97,8 @@ void RenderSystem::update(float deltaTime){
         RenderComponent& rc = mWorld->getComponent<RenderComponent>(e);
         TransformGlobalComponent& tc = mWorld->getComponent<TransformGlobalComponent>(e);
         
+        loadModel(rc);
+
         glm::mat4 model = tc.getTransformation();
 
         glm::mat4 mvp = projection * view * model;

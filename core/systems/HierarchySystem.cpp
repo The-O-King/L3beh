@@ -22,7 +22,7 @@ void HierarchySystem::update(float deltaTime){
         HierarchyParentComponent pc = mWorld->getComponent<HierarchyParentComponent>(e);
         int parent = pc.parent;
         if (!mWorld->has<HierarchyChildrenComponent>(parent)){
-            mWorld->addComponentToEntity<HierarchyChildrenComponent>(parent);
+            mWorld->addComponent<HierarchyChildrenComponent>(parent);
         }
         mWorld->getComponent<HierarchyChildrenComponent>(parent).children.insert(e);
     }
