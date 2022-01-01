@@ -4,9 +4,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "Component.h"
-#include <core/systems/TransformSystem.h>
 
-struct TransformGlobalComponent : public Component{
+struct TransformGlobalComponent : Serialization<TransformGlobalComponent> {
 	const glm::vec3& getPosition() const;
 	const glm::quat& getRotationQuat() const;
 	glm::mat3 getRotationMat() const;
@@ -14,6 +13,10 @@ struct TransformGlobalComponent : public Component{
 
 	glm::mat4 getTransformation() const;
 	glm::mat4 getOrientation() const;
+
+	static std::string getNameImpl() { return "TransformGlobal"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(TransformGlobalComponent, position, rotation, scale)
 
 private:
 	friend class TransformSystem;

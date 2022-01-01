@@ -27,6 +27,9 @@ class ComponentListInterface {
         virtual std::any addComponent(int entity) = 0;
         virtual void removeComponent(int entity) = 0;
         virtual std::any getComponent(int entity) = 0;
+        virtual Component* getComponentAsComponent(int entity) = 0;
+        virtual Component* addComponentAsComponent(int entity) = 0;
+        virtual std::string getName() = 0;
 };
 
 template<class T> 
@@ -43,7 +46,7 @@ static_assert(std::is_base_of<Component, T>::value, "T must derive from Componen
 
         std::any addComponent(int entity) {
             if (entityToIndex.find(entity) != entityToIndex.end()){
-                throw std::runtime_error("Entity " + std::to_string(entity) + " already has Component " + std::to_string(type_id<T>()));
+                throw std::runtime_error("Entity " + std::to_string(entity) + " already has Component " + T::getName());
             }
 
             int index = -1;
@@ -62,7 +65,7 @@ static_assert(std::is_base_of<Component, T>::value, "T must derive from Componen
 
         void removeComponent(int entity) {
             if (entityToIndex.find(entity) == entityToIndex.end()){
-                throw std::runtime_error("Entity " + std::to_string(entity) + " does not have Component " + std::to_string(type_id<T>()));
+                throw std::runtime_error("Entity " + std::to_string(entity) + " does not have Component " + T::getName());
             }
             
             freeIndices.push(entityToIndex[entity]);
@@ -71,6 +74,33 @@ static_assert(std::is_base_of<Component, T>::value, "T must derive from Componen
 
         std::any getComponent(int entity) {
             return &data[entityToIndex[entity]];
+        }
+
+        Component* getComponentAsComponent(int entity) {
+            return &data[entityToIndex[entity]];
+        }
+
+        Component* addComponentAsComponent(int entity) {
+            if (entityToIndex.find(entity) != entityToIndex.end()){
+                throw std::runtime_error("Entity " + std::to_string(entity) + " already has Component " + T::getName());
+            }
+
+            int index = -1;
+            if (!freeIndices.empty()) {
+                index = freeIndices.top(); freeIndices.pop();
+                data[index] = T();
+            }
+            else {
+                data.emplace_back();
+                index = data.size() - 1;
+            }
+            data[index].owner = entity;
+            entityToIndex[entity] = index;
+            return &data[index];
+        }
+
+        std::string getName() {
+            return T::getName();
         }
 };
 

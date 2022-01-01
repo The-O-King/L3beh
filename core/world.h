@@ -20,8 +20,12 @@ class World{
         GLFWwindow* mWindow;
         std::vector<System*> mSystems;
         std::vector<ComponentListInterface*> mComponents;
+        int mComponentCount = 0;
+        std::unordered_map<std::string, int> mComponentNameToTypeID;
         std::unordered_map<int, componentSignature> liveEntities;
         std::set<int> entitiesToDestroy;
+        int createEntity(int entityID);
+        void addComponent(int entityID, int componentID, const nlohmann::json& componentJSON);
         
     public:
         World();
@@ -33,6 +37,9 @@ class World{
         void destroyEntity(int entityID);
         void destroyEntities();
         std::vector<System*>& getSystems();
+
+        bool loadWorld(const std::string& fileName);
+        bool saveWorld(const std::string& fileName) const;
 
         template <class T>
         int registerComponent();
@@ -105,6 +112,8 @@ template <class T>
 int World::registerComponent() {
     int compID = type_id<T>();
     mComponents[compID] = new ComponentList<T>;
+    mComponentNameToTypeID[T::getName()] = compID;
+    mComponentCount++;    
     return compID;
 }
 

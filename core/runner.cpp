@@ -38,7 +38,7 @@ int run(World& gameWorld, std::string worldConfigFile)
     }
 
     Input::setWindow(window);
-    if (!gameWorld.baseWorldGen(worldConfigFile)) {
+    if (!gameWorld.loadWorld(worldConfigFile)) {
         std::cout << "Error loading world config txt file" << worldConfigFile << std::endl;
         return -1;
     }

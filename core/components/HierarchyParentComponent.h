@@ -3,8 +3,12 @@
 
 #include "Component.h"
 
-struct HierarchyParentComponent : public Component {
+struct HierarchyParentComponent : Serialization<HierarchyParentComponent> {
     int parent;
+
+    static std::string getNameImpl() { return "HierarchyParentComponent"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HierarchyParentComponent, parent)
 };
 
 #endif

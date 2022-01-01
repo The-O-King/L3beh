@@ -5,7 +5,7 @@
 #include <set>
 #include "Component.h"
 
-struct PhysicsComponent : public Component{
+struct PhysicsComponent : Serialization<PhysicsComponent> {
 	float gravityScale = 1;
     glm::vec3 sumForces = {0.0f, 0.0f, 0.0f};
 	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
@@ -22,6 +22,10 @@ struct PhysicsComponent : public Component{
 
 	glm::vec3 lockRotation = {1.0f, 1.0f, 1.0f};
 	glm::vec3 lockPosition = {1.0f, 1.0f, 1.0f};
+
+	static std::string getNameImpl() { return "Physics"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(PhysicsComponent, gravityScale, mass, invMass, restitutionCoefficient, friction, lockRotation, lockPosition)
 };
 
 enum ColliderType{
@@ -29,21 +33,33 @@ enum ColliderType{
 	SPHERE = 1
 };
 
-struct ColliderComponent : public Component {
+struct ColliderComponent : Serialization<ColliderComponent> {
 	bool isTrigger;
 	ColliderType type;
 	glm::vec3 offset = {0.0f, 0.0f, 0.0f};
 	std::set<int> collisionEnter;
 	std::set<int> collisionStay;
 	std::set<int> collisionExit;
+
+	static std::string getNameImpl() { return "Collider"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(ColliderComponent, isTrigger, type, offset)
 };
 
-struct BoxColliderComponent : public Component {
+struct BoxColliderComponent : Serialization<BoxColliderComponent> {
 	glm::vec3 halfSize = {0.0f, 0.0f, 0.0f};
+
+	static std::string getNameImpl() { return "BoxCollider"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(BoxColliderComponent, halfSize)
 };
 
-struct SphereColliderComponent : public Component {
+struct SphereColliderComponent : Serialization<SphereColliderComponent> {
 	float radius;
+
+	static std::string getNameImpl() { return "SphereCollider"; }
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(SphereColliderComponent, radius)
 };
 
 #endif
