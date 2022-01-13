@@ -90,12 +90,12 @@ void PlayerMovementSystem::update(float deltaTime){
         pc.currProjectile = glm::clamp(pc.currProjectile + (int)Input::getScrollDelta(), 0, 1);            
 
         if (Input::getMouseButtonDown(GLFW_MOUSE_BUTTON_1)){
-            int baby = mWorld->createEntity(testEntity[pc.currProjectile]);
-            TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
-            temp2.position = tgc.getPosition() + (lookDir * 10.0f);
-            temp2.rotation = tgc.getRotationQuat();
-            PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
-            temp.velocity = lookDir * 20.0f;
+            // int baby = mWorld->createEntity(testEntity[pc.currProjectile]);
+            // TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
+            // temp2.position = tgc.getPosition() + (lookDir * 10.0f);
+            // temp2.rotation = tgc.getRotationQuat();
+            // PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
+            // temp.velocity = lookDir * 20.0f;
         }
         if (Input::getKeyDown(GLFW_KEY_EQUAL)){
             int temp = 0;

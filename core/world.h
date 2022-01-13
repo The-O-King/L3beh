@@ -29,17 +29,15 @@ class World{
         
     public:
         World();
-        bool baseWorldGen(std::string worldConfigFile);
-        virtual bool customWorldGen(int entityID, std::string command, std::istringstream& data);
         int createEntity();
-        int createEntity(std::string entityConfig);
-        int createEntity(std::istream& entityConfig);
         void destroyEntity(int entityID);
         void destroyEntities();
         std::vector<System*>& getSystems();
 
         bool loadWorld(const std::string& fileName);
         bool saveWorld(const std::string& fileName) const;
+
+        void registerSystem(System* newSystem);
 
         template <class T>
         int registerComponent();
