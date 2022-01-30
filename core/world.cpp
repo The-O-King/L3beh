@@ -27,6 +27,28 @@ void World::registerSystem(System* newSystem) {
     mSystems.emplace_back(newSystem);
 }
 
+void World::createComponentsFromJSON(int entityID, const nlohmann::json& entity) {
+    auto components = entity["components"];
+    for (auto& component : components.items()) {
+        int compID = mComponentNameToTypeID[component.key()];
+        addComponent(entityID, compID, component.value());
+    }
+}
+
+int World::createEntityPrefab(const std::string& fileName) {
+    std::ifstream inputFile;
+    inputFile.open(fileName, std::ifstream::in);
+    if (!inputFile.is_open())
+        return -1;
+
+    nlohmann::json j;
+    inputFile >> j;
+
+    int id = createEntity();
+    createComponentsFromJSON(id, j);
+    return id;
+}
+
 bool World::loadWorld(const std::string& fileName) {
     std::ifstream inputFile;
     inputFile.open(fileName, std::ifstream::in);
@@ -42,12 +64,7 @@ bool World::loadWorld(const std::string& fileName) {
         for (int e = 0; e < entities.size(); e++) {
             auto entity = entities[e];
             int id = createEntity((int)entity["id"]);
-            
-            auto components = entity["components"];
-            for (auto& component : components.items()) {
-                int compID = mComponentNameToTypeID[component.key()];
-                addComponent(id, compID, component.value());
-            }
+            createComponentsFromJSON(id, entity);
         }
     }
 

@@ -1,0 +1,91 @@
+{
+    "components": {
+        "Projectile" : {
+            "damage" : 0.0
+        },
+        "BoxCollider": {
+            "halfSize": [
+                0.5,
+                0.5,
+                0.5
+            ]
+        },
+        "Collider": {
+            "isTrigger": false,
+            "offset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "type": 0
+        },
+        "Physics": {
+            "friction": 0.5,
+            "gravityScale": 1.0,
+            "invMass": 1.0,
+            "lockPosition": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "lockRotation": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "mass": 1.0,
+            "restitutionCoefficient": 1.0
+        },
+        "Render": {
+            "diffuse": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "modelFileName": "core/assets/cube.obj",
+            "shininess": 32.0,
+            "specular": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "textureName": "core/assets/wood_albedo.jpg"
+        },
+        "Transform": {
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "TransformGlobal": {
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    }
+}

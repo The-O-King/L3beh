@@ -8,22 +8,9 @@
 #include <core/world.h>
 #include <core/input.h>
 
-std::string testEntity[] = { 
-    "Entity PhysicsBall\n"
-    "Physics 1 1 1 .5     0 0 0   0 0 0\n"
-    "Transform    0 0 -10    0 0 0  1 1 1\n"
-    "SphereCollider 0    0 0 0   1\n"
-    "Render core/assets/sphere.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32\n"
-    "Projectile 1\n"
-    "/Entity\n",
-    
-    "Entity PhysicsCube\n"
-    "Physics 1 1 1 .5     0 0 0   0 0 0\n"
-    "Transform    0 0 -10    0 0 0  1 1 1\n"
-    "BoxCollider 0      0 0 0    .5 .5 .5\n"
-    "Render core/assets/cube.obj core/assets/wood_albedo.jpg  1 1 1 1 1 1 32\n"
-    "Projectile 0\n"
-    "/Entity\n"
+std::string testEntity[] = {
+    "quickstart/projectileCube.json",
+    "quickstart/projectileSphere.json"
 };
 
 PlayerMovementSystem::PlayerMovementSystem(World* w){
@@ -90,12 +77,12 @@ void PlayerMovementSystem::update(float deltaTime){
         pc.currProjectile = glm::clamp(pc.currProjectile + (int)Input::getScrollDelta(), 0, 1);            
 
         if (Input::getMouseButtonDown(GLFW_MOUSE_BUTTON_1)){
-            // int baby = mWorld->createEntity(testEntity[pc.currProjectile]);
-            // TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
-            // temp2.position = tgc.getPosition() + (lookDir * 10.0f);
-            // temp2.rotation = tgc.getRotationQuat();
-            // PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
-            // temp.velocity = lookDir * 20.0f;
+            int baby = mWorld->createEntityPrefab(testEntity[pc.currProjectile]);
+            TransformComponent& temp2 = mWorld->getComponent<TransformComponent>(baby);
+            temp2.position = tgc.getPosition() + (lookDir * 10.0f);
+            temp2.rotation = tgc.getRotationQuat();
+            PhysicsComponent& temp = mWorld->getComponent<PhysicsComponent>(baby);
+            temp.velocity = lookDir * 20.0f;
         }
         if (Input::getKeyDown(GLFW_KEY_EQUAL)){
             int temp = 0;

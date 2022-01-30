@@ -26,10 +26,12 @@ class World{
         std::set<int> entitiesToDestroy;
         int createEntity(int entityID);
         void addComponent(int entityID, int componentID, const nlohmann::json& componentJSON);
+        void createComponentsFromJSON(int entityID, const nlohmann::json& j);  
         
     public:
         World();
         int createEntity();
+        int createEntityPrefab(const std::string& fileName);
         void destroyEntity(int entityID);
         void destroyEntities();
         std::vector<System*>& getSystems();
