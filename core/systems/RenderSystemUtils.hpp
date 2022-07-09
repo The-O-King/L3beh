@@ -9,9 +9,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#define GLFW_DLL
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #define MAX_LIGHTS 10

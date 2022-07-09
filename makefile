@@ -1,11 +1,11 @@
-CC := g++ 
+CC := g++
 CFLAGS := -std=c++17 -Wall -g 
 INCLUDE := -I. -I./third_party
-LINK := -lglew32 -lopengl32 -lglfw3dll
+LINK := -L./third_party/GLFW/lib -lglfw3 -lopengl32 -lgdi32
 TARGET := build/bin/output.exe
 
 # $(wildcard *.cpp /xxx/xxx/*.cpp): get all .cpp files from the current directory and dir "/xxx/xxx/"
-SRCS := $(wildcard quickstart/*.cpp core/systems/*.cpp core/components/*.cpp core/*.cpp third_party/mikktspace/*.cpp)\
+SRCS := $(wildcard quickstart/*.cpp core/systems/*.cpp core/components/*.cpp core/*.cpp third_party/mikktspace/*.cpp third_party/glad/*.cpp)\
 # location of intermediate build files
 OBJDIR := build/intermediate/obj
 # $(patsubst %.cpp,%.o,$(SRCS)): substitute all ".cpp" file name strings to ".o" file name strings

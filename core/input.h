@@ -1,9 +1,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#define GLFW_DLL
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 namespace Input{

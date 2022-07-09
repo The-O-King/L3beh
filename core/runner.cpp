@@ -1,6 +1,4 @@
-#define GLEW_STATIC
-#include <GL/glew.h>
-#define GLFW_DLL
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <iomanip>
@@ -30,13 +28,10 @@ int run(World& gameWorld, std::string worldConfigFile)
     }
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
-    GLenum err = glewInit();
-    if (GLEW_OK != err)
-    {
-        /* Problem: glewInit failed, something is seriously wrong. */
-        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-    }
-
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return false;
+	}
     Input::setWindow(window);
     if (!gameWorld.loadWorld(worldConfigFile)) {
         std::cout << "Error loading world config txt file" << worldConfigFile << std::endl;
